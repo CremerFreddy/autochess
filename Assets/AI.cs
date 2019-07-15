@@ -58,6 +58,7 @@ public class AI : MonoBehaviour
         healthbar1.updateText();
         doesattack = false;
         schachbrett = feld.brett;
+        targetFeld = feld;
         
     }
 
@@ -240,41 +241,45 @@ public class AI : MonoBehaviour
     {
         if(enemie != null)
         {
-            if(schachbrett.getRange(feld.x,feld.y,enemie.feld.x, enemie.feld.y) > range && feld != targetFeld)
+            if(schachbrett.getRange(feld.x,feld.y,enemie.feld.x, enemie.feld.y) > range)
             {
-                int calcnextfieldx;
-                int calcnextfieldy;
-                bool keepsearching = true; //solange suchen , true und wird bei gefundenem target false gesetze;
-                //while(keepsearching)
-                if(feld.x < enemie.feld.x)
+                if  (feld == targetFeld)
                 {
-                    calcnextfieldx = feld.x + 1;
-                }
-                else if (feld.x > enemie.feld.x)
-                {
-                    calcnextfieldx = feld.x - 1;
-                }
-                else
-                {
-                    calcnextfieldx = feld.x;
-                }
+                    int calcnextfieldx;
+                    int calcnextfieldy;
+                    bool keepsearching = true; //solange suchen , true und wird bei gefundenem target false gesetze;
+                                               //while(keepsearching)
+                    if (feld.x < enemie.feld.x)
+                    {
+                        calcnextfieldx = feld.x + 1;
+                    }
+                    else if (feld.x > enemie.feld.x)
+                    {
+                        calcnextfieldx = feld.x - 1;
+                    }
+                    else
+                    {
+                        calcnextfieldx = feld.x;
+                    }
 
-                if (feld.y < enemie.feld.y)
-                {
-                    calcnextfieldy = feld.y + 1;
+                    if (feld.y < enemie.feld.y)
+                    {
+                        calcnextfieldy = feld.y + 1;
+                    }
+                    else if (feld.y > enemie.feld.y)
+                    {
+                        calcnextfieldy = feld.y - 1;
+                    }
+                    else
+                    {
+                        calcnextfieldy = feld.y;
+                    }
+                    if (schachbrett.brettArray[calcnextfieldx, calcnextfieldy].locked == false)
+                    {
+                        setTargetField(schachbrett.brettArray[calcnextfieldx, calcnextfieldy]);
+                    }
                 }
-                else if (feld.y > enemie.feld.y)
-                {                    
-                     calcnextfieldy = feld.y - 1;                                 
-                }
-                else
-                {
-                    calcnextfieldy = feld.y;
-                }
-                if(schachbrett.brettArray[calcnextfieldx,calcnextfieldy].locked == false)
-                {
-                    setTargetField(schachbrett.brettArray[calcnextfieldx, calcnextfieldy]);
-                }
+           
                 
             }
             else
@@ -299,7 +304,7 @@ public class AI : MonoBehaviour
                     {
                         enemie.healthbar1.updateText();
                     }
-                    timeLeft = Random.Range(cooldown - 1, cooldown + 1);
+                    timeLeft = cooldown;
                 }
                 
             }
