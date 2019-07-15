@@ -38,6 +38,15 @@ public class schachbrett : MonoBehaviour
     public int getRange(int x1, int y1, int x2, int y2)
     {
         int range = 2;
+        if(System.Math.Abs(x1-x2) > System.Math.Abs(y1-y2))
+        {
+            range  = System.Math.Abs(x1-x2);
+        }
+        else
+        {
+            range = System.Math.Abs(y1 - y2);
+        }
+        
         return range;
     }
 }

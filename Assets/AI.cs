@@ -42,6 +42,8 @@ public class AI : MonoBehaviour
         maxhealth = myUnit.health;
         health = maxhealth;
         damage = myUnit.attack;
+        speed = myUnit.speed;
+        range = myUnit.range;
         timeLeft = 10 - myUnit.attackspeed;
         cooldown = timeLeft;
         if (isenemy)
@@ -56,8 +58,7 @@ public class AI : MonoBehaviour
         healthbar1.updateText();
         doesattack = false;
         schachbrett = feld.brett;
-        speed = 1.0f;
-        range = 1;
+        
     }
 
     // Update is called once per frame
@@ -126,11 +127,17 @@ public class AI : MonoBehaviour
     {
         List<schachfeld> feldlist = new List<schachfeld>(); //weg
         List<weg> wegliste = new List<weg>(); // wegliste
+        List<weg> finalweg =  Astar(wegliste);
         
         //wegfindungsalgorithmus schreiben
 
         weg weg1 = new weg(feldlist);
         wegliste.Add(weg1);
+    }
+
+    public List<weg> Astar(List<weg> wegliste)
+    {
+        return new List<weg>();
     }
 
 
@@ -201,7 +208,9 @@ public class AI : MonoBehaviour
         {
             if (targetFeld != null)
             {
+                feld.locked = false;
                 feld = targetFeld;
+                
             }
             
             findEnemy();
@@ -213,7 +222,9 @@ public class AI : MonoBehaviour
 
     public void setTargetField(schachfeld target)
     {
+        
         targetFeld = target;
+        targetFeld.locked = true;
         starttime = Time.time;
         startpoint = new Vector3(feld.transform.position.x, 1, feld.transform.position.z);
         endpoint = new Vector3(targetFeld.transform.position.x, 1, targetFeld.transform.position.z);
@@ -252,6 +263,7 @@ public class AI : MonoBehaviour
                 {
                     
                      calcnextfieldy = feld.y - 1;
+                     
                     
                 }
                 setTargetField(schachbrett.brettArray[calcnextfieldx, calcnextfieldy]);
