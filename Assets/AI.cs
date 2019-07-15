@@ -115,12 +115,9 @@ public class AI : MonoBehaviour
 
     public void performAttack()
     {
-        timeLeft -= Time.deltaTime;
-        if (timeLeft < 0)
-        {
+      
             attack(enemie);
-            timeLeft = Random.Range(cooldown - 1, cooldown + 1);
-        }
+         
     }
 
     public void searchWege()
@@ -243,50 +240,68 @@ public class AI : MonoBehaviour
     {
         if(enemie != null)
         {
-            if(schachbrett.getRange(feld.x,feld.y,enemie.feld.x, enemie.feld.y) > range)
+            if(schachbrett.getRange(feld.x,feld.y,enemie.feld.x, enemie.feld.y) > range && feld != targetFeld)
             {
                 int calcnextfieldx;
                 int calcnextfieldy;
+                bool keepsearching = true; //solange suchen , true und wird bei gefundenem target false gesetze;
+                //while(keepsearching)
                 if(feld.x < enemie.feld.x)
                 {
                     calcnextfieldx = feld.x + 1;
                 }
-                else
+                else if (feld.x > enemie.feld.x)
                 {
                     calcnextfieldx = feld.x - 1;
                 }
+                else
+                {
+                    calcnextfieldx = feld.x;
+                }
+
                 if (feld.y < enemie.feld.y)
                 {
                     calcnextfieldy = feld.y + 1;
                 }
+                else if (feld.y > enemie.feld.y)
+                {                    
+                     calcnextfieldy = feld.y - 1;                                 
+                }
                 else
                 {
-                    
-                     calcnextfieldy = feld.y - 1;
-                     
-                    
+                    calcnextfieldy = feld.y;
                 }
-                setTargetField(schachbrett.brettArray[calcnextfieldx, calcnextfieldy]);
+                if(schachbrett.brettArray[calcnextfieldx,calcnextfieldy].locked == false)
+                {
+                    setTargetField(schachbrett.brettArray[calcnextfieldx, calcnextfieldy]);
+                }
+                
             }
             else
             {
-                doesattack = true;
-                if ((enemie.health -= Random.Range(damage - 2, damage + 2)) <= 0)
+                timeLeft -= Time.deltaTime;
+                if (timeLeft < 0)
                 {
-                    if (isenemy)
+                    doesattack = true;
+                    if ((enemie.health -= Random.Range(damage - 2, damage + 2)) <= 0)
                     {
-                        if (teamlist.teamlist.Count == 0)
+                        if (isenemy)
                         {
-                            healthbar1.textfield.text = "WIN";
-                            enemie.healthbar1.textfield.text = "LOSE";
-                            phase.nextPhase(true);
+                            if (teamlist.teamlist.Count == 0)
+                            {
+                                healthbar1.textfield.text = "WIN";
+                                enemie.healthbar1.textfield.text = "LOSE";
+                                phase.nextPhase(true);
+                            }
                         }
                     }
+                    else
+                    {
+                        enemie.healthbar1.updateText();
+                    }
+                    timeLeft = Random.Range(cooldown - 1, cooldown + 1);
                 }
-                else
-                {
-                    enemie.healthbar1.updateText();
-                }
+                
             }
             
             
