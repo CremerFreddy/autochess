@@ -396,8 +396,13 @@ MonoBehaviour:
   enemie: {fileID: 0}
   healthbar1: {fileID: 7867971267493307280}
   phase: {fileID: 0}
+  myUnit: {fileID: 11400000, guid: 7800852d99b5ff845b84b4b7d7ec5261, type: 2}
+  evaluate: 0
   doesattack: 0
   isenemy: 0
+  opponentList: []
+  feld: {fileID: 0}
+  lockMovement: 0
 --- !u!1 &7867971267493307281
 GameObject:
   m_ObjectHideFlags: 0

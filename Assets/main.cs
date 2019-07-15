@@ -61,6 +61,13 @@ public class main : MonoBehaviour
         if (Input.GetKeyDown("space"))
         {
             print("space key was pressed");
+            foreach(schachfeld f in schachbrett1.brettArray)
+            {
+                if(f.locked)
+                {
+                    f.onField.evaluate = true;
+                }
+            }
             nextPhase(true);
         }
         if (Input.GetKeyDown("d"))
@@ -75,18 +82,18 @@ public class main : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit))
             {
-                //hit.rigidbody.AddForceAtPosition(ray.direction * pokeForce, hit.point);
-                // This script will simply instantiate the Prefab when the game starts.
-                // Instantiate at position (0, 0, 0) and zero rotation.
-                int pos1 = (int)Math.Round(hit.point.x, 0);
-                int pos2 = (int)Math.Round(hit.point.z, 0);
-                if(schachbrett1.brettArray[pos1, pos2] == null && pos1 <= 8 && pos2 <=3)
+                int pos1 = (int)hit.collider.transform.position.x;//(int)Math.Round(hit.point.x, 0);
+                int pos2 = (int)hit.collider.transform.position.z;//Math.Round(hit.point.z, 0);
+                if(schachbrett1.brettArray[pos1, pos2].locked == false)
                 {
+                    schachbrett1.brettArray[pos1, pos2].locked = true;
                     GameObject obj = Instantiate(myPrefab, new Vector3(pos1, 1, pos2), Quaternion.identity);
+                    AI objAI = obj.GetComponent<AI>();
+                    objAI.feld = schachbrett1.brettArray[pos1, pos2];
+                    objAI.feld.onField = objAI;
                     obj.GetComponent<AI>().enemielist = gameObject.GetComponent<enemies>();
                     obj.GetComponent<AI>().teamlist = gameObject.GetComponent<team>();
                     obj.GetComponent<AI>().phase = gameObject.GetComponent<main>();
-                    schachbrett1.brettArray[pos1, pos2] = obj;
                 }
                 
             }
@@ -100,15 +107,18 @@ public class main : MonoBehaviour
             if (Physics.Raycast(ray, out hit))
             {
 
-                int pos1 = (int)Math.Round(hit.point.x, 0);
-                int pos2 = (int)Math.Round(hit.point.z, 0);
-                if (schachbrett1.brettArray[pos1, pos2] == null)
+                int pos1 = (int)hit.collider.transform.position.x;//(int)Math.Round(hit.point.x, 0);
+                int pos2 = (int)hit.collider.transform.position.z;//Math.Round(hit.point.z, 0);
+                if (schachbrett1.brettArray[pos1, pos2].locked == false)
                 {
+                    schachbrett1.brettArray[pos1, pos2].locked = true;
                     GameObject obj = Instantiate(myEnemiePrefab,new Vector3(pos1, 1, pos2), Quaternion.identity);
+                    AI objAI = obj.GetComponent<AI>();
+                    objAI.feld = schachbrett1.brettArray[pos1, pos2];
+                    objAI.feld.onField = objAI;
                     obj.GetComponent<AI>().enemielist = gameObject.GetComponent<enemies>();
                     obj.GetComponent<AI>().teamlist = gameObject.GetComponent<team>();
                     obj.GetComponent<AI>().phase = gameObject.GetComponent<main>();
-                    schachbrett1.brettArray[pos1, pos2] = obj;
                 }
             }
         }
