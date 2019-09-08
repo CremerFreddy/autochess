@@ -17,7 +17,7 @@ public class schachbrett : MonoBehaviour
         {
             for (int j = 0; j<size;j++)
             {
-                GameObject feld = Instantiate(chessfieldPrefab, new Vector3(i, 0, j), Quaternion.identity);
+                GameObject feld = Instantiate(chessfieldPrefab, new Vector3(i*10, 0, j*10), Quaternion.identity);
                 schachfeld feld1 = feld.GetComponent<schachfeld>();
                 feld1.brett = this;
                 brettArray[i, j] = feld1;

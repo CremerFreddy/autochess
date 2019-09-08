@@ -38,7 +38,7 @@ public class DragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         if (controls.selectedfield.locked == false)
         {
             controls.selectedfield.locked = true;
-            GameObject obj = Instantiate(controls.myPrefab, new Vector3(controls.selectedfield.x, 1, controls.selectedfield.y), Quaternion.identity);
+            GameObject obj = Instantiate(controls.myPrefab, new Vector3(controls.selectedfield.x*10, 10, controls.selectedfield.y*10), Quaternion.identity);
             AI objAI = obj.GetComponent<AI>();
             objAI.feld = controls.selectedfield;
             objAI.feld.onField = objAI;
