@@ -257,19 +257,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38650839118c81f4293eb090e6497176, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myUnit: {fileID: 11400000, guid: db60e5d5afda5d24e8168f7eea869c2b, type: 2}
   maxhealth: 0
   health: 0
-  enemielist: {fileID: 0}
-  teamlist: {fileID: 0}
-  enemie: {fileID: 0}
-  healthbar1: {fileID: 5945631990022738857}
-  phase: {fileID: 0}
-  myUnit: {fileID: 11400000, guid: db60e5d5afda5d24e8168f7eea869c2b, type: 2}
   evaluate: 0
   doesattack: 0
   isenemy: 1
+  enemielist: {fileID: 6270981879474028589, guid: 66f8f16ec100bec4db60fef9b3cf88c7,
+    type: 3}
+  teamlist: {fileID: 6270981879474028590, guid: 66f8f16ec100bec4db60fef9b3cf88c7,
+    type: 3}
   opponentList: []
+  enemie: {fileID: 0}
+  healthbar1: {fileID: 5945631990022738857}
+  phase: {fileID: 6270981879474028579, guid: 66f8f16ec100bec4db60fef9b3cf88c7, type: 3}
   feld: {fileID: 0}
+  targetFeld: {fileID: 0}
+  startpoint: {x: 0, y: 0, z: 0}
+  endpoint: {x: 0, y: 0, z: 0}
+  schachbrett: {fileID: 0}
+  wegliste: []
   lockMovement: 0
 --- !u!1 &5945631991048027355
 GameObject:

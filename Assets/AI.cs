@@ -237,6 +237,7 @@ public class AI : MonoBehaviour
         }
     }
 
+
     public void attack(AI enemie)
     {
         if(enemie != null)
@@ -249,35 +250,56 @@ public class AI : MonoBehaviour
                     int calcnextfieldy;
                     bool keepsearching = true; //solange suchen , true und wird bei gefundenem target false gesetze;
                                                //while(keepsearching)
-                    if (feld.x < enemie.feld.x)
-                    {
-                        calcnextfieldx = feld.x + 1;
-                    }
-                    else if (feld.x > enemie.feld.x)
-                    {
-                        calcnextfieldx = feld.x - 1;
-                    }
-                    else
-                    {
-                        calcnextfieldx = feld.x;
-                    }
+                   // while(keepsearching)
+                    //{
+                        if (feld.x < enemie.feld.x)
+                        {
+                            calcnextfieldx = feld.x + 1;
+                            if(schachbrett.brettArray[calcnextfieldx, feld.y].locked)
+                            {
+                                calcnextfieldx -= 1;
+                            }
+                        }
+                        else if (feld.x > enemie.feld.x)
+                        {
+                            calcnextfieldx = feld.x - 1;
+                            if (schachbrett.brettArray[calcnextfieldx, feld.y].locked)
+                            {
+                                calcnextfieldx += 1;
+                            }
+                        }
+                        else
+                        {
+                            calcnextfieldx = feld.x;
+                        }
 
-                    if (feld.y < enemie.feld.y)
-                    {
-                        calcnextfieldy = feld.y + 1;
-                    }
-                    else if (feld.y > enemie.feld.y)
-                    {
-                        calcnextfieldy = feld.y - 1;
-                    }
-                    else
-                    {
-                        calcnextfieldy = feld.y;
-                    }
-                    if (schachbrett.brettArray[calcnextfieldx, calcnextfieldy].locked == false)
-                    {
-                        setTargetField(schachbrett.brettArray[calcnextfieldx, calcnextfieldy]);
-                    }
+                        if (feld.y < enemie.feld.y)
+                        {
+                            calcnextfieldy = feld.y + 1;
+                            if (schachbrett.brettArray[calcnextfieldx, calcnextfieldy].locked)
+                            {
+                                calcnextfieldy -= 1;
+                            }
+                        }
+                        else if (feld.y > enemie.feld.y)
+                        {
+                            calcnextfieldy = feld.y - 1;
+                            if (schachbrett.brettArray[calcnextfieldx, calcnextfieldy].locked)
+                            {
+                                calcnextfieldy += 1;
+                            }
+                        }
+                        else
+                        {
+                            calcnextfieldy = feld.y;
+                        }
+                        if (schachbrett.brettArray[calcnextfieldx, calcnextfieldy].locked == false)
+                        {
+                            setTargetField(schachbrett.brettArray[calcnextfieldx, calcnextfieldy]);
+                            keepsearching = false;
+                        }
+                    //}
+                    
                 }
            
                 

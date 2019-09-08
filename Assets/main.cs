@@ -75,53 +75,7 @@ public class main : MonoBehaviour
 
 
         }
-        if (Input.GetMouseButtonDown(0))
-        {
-            RaycastHit hit;
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(ray, out hit))
-            {
-                int pos1 = (int)hit.collider.transform.position.x;//(int)Math.Round(hit.point.x, 0);
-                int pos2 = (int)hit.collider.transform.position.z;//Math.Round(hit.point.z, 0);
-                if(schachbrett1.brettArray[pos1, pos2].locked == false)
-                {
-                    schachbrett1.brettArray[pos1, pos2].locked = true;
-                    GameObject obj = Instantiate(myPrefab, new Vector3(pos1, 1, pos2), Quaternion.identity);
-                    AI objAI = obj.GetComponent<AI>();
-                    objAI.feld = schachbrett1.brettArray[pos1, pos2];
-                    objAI.feld.onField = objAI;
-                    obj.GetComponent<AI>().enemielist = gameObject.GetComponent<enemies>();
-                    obj.GetComponent<AI>().teamlist = gameObject.GetComponent<team>();
-                    obj.GetComponent<AI>().phase = gameObject.GetComponent<main>();
-                }
-                
-            }
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            RaycastHit hit;
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(ray, out hit))
-            {
-
-                int pos1 = (int)hit.collider.transform.position.x;//(int)Math.Round(hit.point.x, 0);
-                int pos2 = (int)hit.collider.transform.position.z;//Math.Round(hit.point.z, 0);
-                if (schachbrett1.brettArray[pos1, pos2].locked == false)
-                {
-                    schachbrett1.brettArray[pos1, pos2].locked = true;
-                    GameObject obj = Instantiate(myEnemiePrefab,new Vector3(pos1, 1, pos2), Quaternion.identity);
-                    AI objAI = obj.GetComponent<AI>();
-                    objAI.feld = schachbrett1.brettArray[pos1, pos2];
-                    objAI.feld.onField = objAI;
-                    obj.GetComponent<AI>().enemielist = gameObject.GetComponent<enemies>();
-                    obj.GetComponent<AI>().teamlist = gameObject.GetComponent<team>();
-                    obj.GetComponent<AI>().phase = gameObject.GetComponent<main>();
-                }
-            }
-        }
+       
 
         switch (phase)
         {
