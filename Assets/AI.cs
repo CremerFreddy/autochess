@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UI;
 
 
@@ -33,6 +34,7 @@ public class AI : MonoBehaviour
     public Vector3 endpoint;
     public schachbrett schachbrett;
     public List<weg> wegliste;
+    public NavMeshAgent agent;
 
     public bool lockMovement; // wird gelockt solange unit sich von einem zum anderen feld bewegt
     // Start is called before the first frame update
@@ -59,7 +61,21 @@ public class AI : MonoBehaviour
         doesattack = false;
         schachbrett = feld.brett;
         targetFeld = feld;
-        
+        NavMeshHit closestHit;
+        if (NavMesh.SamplePosition(transform.position, out closestHit, 500, 1))
+        {
+            transform.position = closestHit.position;
+            agent.enabled = false;
+            agent.enabled = true;
+            //TODO
+        }
+        else
+        {
+            Debug.Log("...");
+        }
+
+        agent.SetDestination(schachbrett.brettArray[5,6].transform.position);
+
     }
 
     // Update is called once per frame
@@ -153,12 +169,12 @@ public class AI : MonoBehaviour
 
     public int calcRange(AI g)
     {
-        int x1, y1, x2, y2, x3, y3;
+        float x1, y1, x2, y2, x3, y3;
 
-        int a = g.feld.x;
-        int b = g.feld.y;
-        int c = feld.x;
-        int d = feld.y;
+        float a = g.transform.position.x;
+        float b = g.transform.position.y;
+        float c = transform.position.x;
+        float d = transform.position.y;
         x1 = (a > c) ? a : c;
         x2 = (a < c) ? a : c;
         y1 = (b > d) ? b : d;
@@ -168,11 +184,11 @@ public class AI : MonoBehaviour
 
         if(x3 > y3)
         {
-            return x3;
+            return (int)x3;
         }
         else
         {
-            return y3;
+            return (int)y3;
         }
     }
     public AI findEnemy()
@@ -182,11 +198,15 @@ public class AI : MonoBehaviour
         AI target = null;
         foreach(AI g in opponentList)
         {
-            if (calcRange(g) < rangeto)
+            if(g != null)
             {
-                rangeto = calcRange(g);
-                target = g;
+                if (calcRange(g) < rangeto)
+                {
+                    rangeto = calcRange(g);
+                    target = g;
+                }
             }
+            
         }
         //Debug.Log(calcRange(target));
         return target;
@@ -233,7 +253,8 @@ public class AI : MonoBehaviour
     {
         if(targetFeld != feld && targetFeld != null)
         {
-            moveToTarget();
+            agent.SetDestination(targetFeld.transform.position);
+            Debug.Log("destination set");
         }
     }
 
@@ -244,6 +265,9 @@ public class AI : MonoBehaviour
         {
             if(schachbrett.getRange(feld.x,feld.y,enemie.feld.x, enemie.feld.y) > range)
             {
+                setTargetField(schachbrett.brettArray[enemie.feld.x, enemie.feld.y]);
+
+                /*
                 if  (feld == targetFeld)
                 {
                     int calcnextfieldx;
@@ -300,7 +324,7 @@ public class AI : MonoBehaviour
                         }
                     //}
                     
-                }
+                }*/
            
                 
             }

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2078219122640538193}
   - component: {fileID: 3087159781269127966}
   - component: {fileID: 5264825463924001516}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 5165717703913226208}
   - component: {fileID: 8599866600428194040}
   - component: {fileID: 3438139914663382688}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -194,7 +194,7 @@ GameObject:
   - component: {fileID: 2462000618879857067}
   - component: {fileID: 2618705655739519831}
   - component: {fileID: 3004919713099308922}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -286,7 +286,8 @@ GameObject:
   - component: {fileID: 8890536310173038381}
   - component: {fileID: 1104734710669697507}
   - component: {fileID: 2587105892705596719}
-  m_Layer: 0
+  - component: {fileID: 8494351612703055291}
+  m_Layer: 9
   m_Name: chessfield
   m_TagString: chessfield
   m_Icon: {fileID: 0}
@@ -388,6 +389,22 @@ MonoBehaviour:
   brett: {fileID: 0}
   selected: 0
   changed: 0
+--- !u!208 &8494351612703055291
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5550905899397370498}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!1 &5585430898705710462
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,7 +417,7 @@ GameObject:
   - component: {fileID: 3956788704200207922}
   - component: {fileID: 1035213063888754524}
   - component: {fileID: 561021183589964606}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

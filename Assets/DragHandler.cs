@@ -8,6 +8,7 @@ public class DragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     Vector3 startPosition;
     Transform startParent;
     public controlsManager controls;
+    public int id;
 
 
     #region IBeginDragHandler implementation
@@ -38,7 +39,15 @@ public class DragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         if (controls.selectedfield.locked == false)
         {
             controls.selectedfield.locked = true;
-            GameObject obj = Instantiate(controls.myPrefab, new Vector3(controls.selectedfield.x*10, 10, controls.selectedfield.y*10), Quaternion.identity);
+            GameObject obj;
+            if (id == 0)
+            {
+                obj = Instantiate(controls.myPrefab, new Vector3(controls.selectedfield.x * 10, 10, controls.selectedfield.y * 10), Quaternion.identity);
+            }
+            else
+            {
+                obj = Instantiate(controls.myEnemiePrefab, new Vector3(controls.selectedfield.x * 10, 10, controls.selectedfield.y * 10), Quaternion.identity);
+            }
             AI objAI = obj.GetComponent<AI>();
             objAI.feld = controls.selectedfield;
             objAI.feld.onField = objAI;

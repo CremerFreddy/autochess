@@ -22,8 +22,9 @@ public class controlsManager : MonoBehaviour
         if(cardSelected)
         {
             RaycastHit hit;
+            int layer_mask = LayerMask.GetMask("Field");
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out hit, 1000, layer_mask))
             {
                 if(hit.collider.tag == "chessfield")
                 {
