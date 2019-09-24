@@ -58,7 +58,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4b34f07398f344044bfefeb7c49c263f, type: 2}
+  - {fileID: 2100000, guid: 93632edca42d90645b8e7580e27b5fa0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -149,7 +149,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4b34f07398f344044bfefeb7c49c263f, type: 2}
+  - {fileID: 2100000, guid: 93632edca42d90645b8e7580e27b5fa0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -240,7 +240,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4b34f07398f344044bfefeb7c49c263f, type: 2}
+  - {fileID: 2100000, guid: 93632edca42d90645b8e7580e27b5fa0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -287,6 +287,7 @@ GameObject:
   - component: {fileID: 1104734710669697507}
   - component: {fileID: 2587105892705596719}
   - component: {fileID: 8494351612703055291}
+  - component: {fileID: 5977544067165537846}
   m_Layer: 9
   m_Name: chessfield
   m_TagString: chessfield
@@ -337,7 +338,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e796e89901292f34abac61993ce8f9bb, type: 2}
+  - {fileID: 2100000, guid: 13b50b9b3a9f2984ea41c70e6f74fe42, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -405,6 +406,20 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0, z: 0}
   m_TimeToStationary: 0.5
+--- !u!114 &5977544067165537846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5550905899397370498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c91f32f72b90244588a5242de2a9b7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Connections: []
+  blocked: 0
 --- !u!1 &5585430898705710462
 GameObject:
   m_ObjectHideFlags: 0
@@ -463,7 +478,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4b34f07398f344044bfefeb7c49c263f, type: 2}
+  - {fileID: 2100000, guid: 93632edca42d90645b8e7580e27b5fa0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

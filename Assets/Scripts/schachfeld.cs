@@ -6,7 +6,6 @@ public class schachfeld : MonoBehaviour
 {
     public int x;
     public int y;
-    public bool locked;
     public AI onField;
     public schachbrett brett;
     public bool selected;
@@ -15,7 +14,6 @@ public class schachfeld : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        locked = false;
         onField = null;
         selected = false;
         changed = true;
@@ -36,8 +34,4 @@ public class schachfeld : MonoBehaviour
         }
     }
 
-    public void lockField(bool ok)
-    {
-        locked = ok;
-    }
 }

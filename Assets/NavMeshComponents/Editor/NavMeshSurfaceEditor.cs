@@ -93,7 +93,7 @@ namespace UnityEditor.AI
 
             var targetPath = "Assets";
             if (!string.IsNullOrEmpty(activeScenePath))
-                targetPath = Path.Combine(Path.GetDirectoryName(activeScenePath), Path.GetFileNameWithoutExtension(activeScenePath));
+                targetPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(activeScenePath), System.IO.Path.GetFileNameWithoutExtension(activeScenePath));
             if (!Directory.Exists(targetPath))
                 Directory.CreateDirectory(targetPath);
             return targetPath;
@@ -103,7 +103,7 @@ namespace UnityEditor.AI
         {
             var targetPath = GetAndEnsureTargetPath(surface);
 
-            var combinedAssetPath = Path.Combine(targetPath, "NavMesh-" + surface.name + ".asset");
+            var combinedAssetPath = System.IO.Path.Combine(targetPath, "NavMesh-" + surface.name + ".asset");
             combinedAssetPath = AssetDatabase.GenerateUniqueAssetPath(combinedAssetPath);
             AssetDatabase.CreateAsset(surface.navMeshData, combinedAssetPath);
         }

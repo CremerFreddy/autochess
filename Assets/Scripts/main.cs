@@ -10,10 +10,6 @@ public class main : MonoBehaviour
     public int maxphase = 2;
     public int winstreak;
 
-    //units
-    public GameObject myPrefab;
-    public GameObject myEnemiePrefab;
-
     public schachbrett schachbrett1;
 
     // Start is called before the first frame update
@@ -63,10 +59,6 @@ public class main : MonoBehaviour
             print("space key was pressed");
             foreach(schachfeld f in schachbrett1.brettArray)
             {
-                if(f.locked)
-                {
-                    f.onField.evaluate = true;
-                }
             }
             nextPhase(true);
         }

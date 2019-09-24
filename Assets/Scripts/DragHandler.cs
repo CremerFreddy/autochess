@@ -36,9 +36,8 @@ public class DragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (controls.selectedfield.locked == false)
+        if (controls.selectedfield.GetComponent<Node>().blocked == false && controls.selectedfield != null)
         {
-            controls.selectedfield.locked = true;
             GameObject obj;
             if (id == 0)
             {
@@ -51,7 +50,13 @@ public class DragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             AI objAI = obj.GetComponent<AI>();
             objAI.feld = controls.selectedfield;
             objAI.feld.onField = objAI;
+            Follower fol1 = objAI.GetComponent<Follower>();
+            fol1.setGraph(controls.brett.GetComponent<Graph>());
+            fol1.setStart(objAI.feld.GetComponent<Node>());
+            fol1.m_Path.m_Nodes = controls.brett.GetComponent<Graph>().nodes;
+            Debug.Log(fol1.m_Path.m_Nodes.Count);
             Destroy(itemBeingDragged);
+            fol1.setEnd(controls.brett.brettArray[5, 6].GetComponent<Node>());
         }
         
         controls.cardSelected = false;
