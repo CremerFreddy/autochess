@@ -1,0 +1,17 @@
+{
+  "name": "runenschlacht",
+  "version": "1.0.0",
+  "description": "Runenschlacht – ein Auto-Battler (Autochess) fuer den Browser. Reines JavaScript, keine Dependencies.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node tools/serve.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.1"
+  }
+}
