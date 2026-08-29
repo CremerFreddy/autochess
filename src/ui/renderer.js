@@ -94,7 +94,23 @@ export function zeichne(ctx, z) {
 
 // ---------------------------------------------------------------- Brett
 
-function zeichneBrett(ctx, z) {
+/**
+ * Das Brett ändert sich nie – es wird einmal auf eine eigene Ebene gezeichnet
+ * und danach nur noch kopiert. Das spart pro Bild den Großteil der Zeichenarbeit.
+ */
+let brettEbene = null;
+
+function brettEbeneHolen() {
+  if (brettEbene) return brettEbene;
+  const flaeche = typeof OffscreenCanvas !== 'undefined'
+    ? new OffscreenCanvas(LAYOUT.breite, LAYOUT.hoehe)
+    : Object.assign(document.createElement('canvas'), { width: LAYOUT.breite, height: LAYOUT.hoehe });
+  zeichneBrettFlaeche(flaeche.getContext('2d'));
+  brettEbene = flaeche;
+  return flaeche;
+}
+
+function zeichneBrettFlaeche(ctx) {
   const ecken = [projiziere(0, 0), projiziere(BREITE, 0), projiziere(BREITE, HOEHE), projiziere(0, HOEHE)];
 
   // Materialstärke: dieselbe Fläche nach unten versetzt
@@ -134,7 +150,7 @@ function zeichneBrett(ctx, z) {
       else ctx.fillStyle = hell ? '#2a2233' : '#211b2a';
       ctx.fill();
 
-      // Kantenlicht: obere Kante etwas heller
+      // Kantenlicht an der oberen Feldkante
       const a = projiziere(x + 0.04, y + 0.04);
       const b = projiziere(x + 0.96, y + 0.04);
       ctx.strokeStyle = eigen ? 'rgba(150,200,255,.10)' : 'rgba(200,170,255,.08)';
@@ -143,21 +159,6 @@ function zeichneBrett(ctx, z) {
       ctx.moveTo(a.px, a.py);
       ctx.lineTo(b.px, b.py);
       ctx.stroke();
-
-      if (!z.kampf && eigen) {
-        if (z.drag) {
-          const frei = !z.belegteFelder?.has(`${x},${y}`);
-          feldPfad(ctx, x, y, 0.08);
-          ctx.strokeStyle = frei ? 'rgba(124,208,255,.5)' : 'rgba(242,199,107,.45)';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-        if (z.hover && z.hover.x === x && z.hover.y === y) {
-          feldPfad(ctx, x, y);
-          ctx.fillStyle = 'rgba(124,208,255,.13)';
-          ctx.fill();
-        }
-      }
     }
   }
 
@@ -174,6 +175,29 @@ function zeichneBrett(ctx, z) {
   ctx.moveTo(ml.px, ml.py);
   ctx.lineTo(mr.px, mr.py);
   ctx.stroke();
+}
+
+/** Kopiert die Brettebene und legt nur die veränderlichen Markierungen darüber. */
+function zeichneBrett(ctx, z) {
+  ctx.drawImage(brettEbeneHolen(), 0, 0);
+  if (z.kampf) return;
+
+  for (let y = HOEHE / 2; y < HOEHE; y++) {
+    for (let x = 0; x < BREITE; x++) {
+      if (z.drag) {
+        const frei = !z.belegteFelder?.has(`${x},${y}`);
+        feldPfad(ctx, x, y, 0.08);
+        ctx.strokeStyle = frei ? 'rgba(124,208,255,.5)' : 'rgba(242,199,107,.45)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      if (z.hover && z.hover.x === x && z.hover.y === y) {
+        feldPfad(ctx, x, y);
+        ctx.fillStyle = 'rgba(124,208,255,.13)';
+        ctx.fill();
+      }
+    }
+  }
 }
 
 // -------------------------------------------------------- Vorbereitung
