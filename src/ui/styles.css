@@ -1,0 +1,294 @@
+/* Runenschlacht – Oberfläche */
+:root {
+  --bg: #0c1016;
+  --bg-tief: #070a0e;
+  --panel: #141b25;
+  --panel-hell: #1c2531;
+  --rand: #26313f;
+  --text: #dfe6f0;
+  --text-leise: #8b97a8;
+  --gold: #f2c76b;
+  --leben: #ff6b7a;
+  --blau: #6fc7ff;
+  --gruen: #6fe0a0;
+  --lila: #b98bff;
+  --schrift: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: radial-gradient(1200px 800px at 50% -10%, #16202c 0%, var(--bg) 55%, var(--bg-tief) 100%);
+  color: var(--text);
+  font-family: var(--schrift);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 56px 1fr 146px;
+  gap: 8px;
+  padding: 8px;
+}
+
+.versteckt { display: none !important; }
+
+/* ---------------------------------------------------------- Kopfzeile */
+.kopf {
+  display: grid;
+  grid-template-columns: 260px 1fr 400px;
+  align-items: center;
+  background: linear-gradient(180deg, var(--panel-hell), var(--panel));
+  border: 1px solid var(--rand);
+  border-radius: 12px;
+  padding: 0 14px;
+}
+.marke { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 14px; }
+.marke-glyph { color: var(--gold); font-size: 20px; }
+
+.kopf-mitte { display: flex; align-items: center; gap: 16px; justify-content: center; }
+.runde-anzeige { text-align: center; min-width: 74px; }
+.runde-anzeige span { font-size: 20px; font-weight: 700; display: block; line-height: 1; }
+.runde-anzeige small { color: var(--text-leise); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+.timer-schiene { width: 220px; height: 6px; background: #0c121a; border-radius: 99px; overflow: hidden; border: 1px solid var(--rand); }
+#timerBalken { height: 100%; width: 100%; background: linear-gradient(90deg, var(--blau), var(--lila)); transition: width .2s linear; }
+.gegner-anzeige { color: var(--text-leise); font-size: 13px; min-width: 170px; }
+.gegner-anzeige b { color: var(--text); }
+
+.kopf-werte { display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
+.wert { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; position: relative; }
+.wert-icon { font-size: 14px; opacity: .9; }
+.wert.leben .wert-icon { color: var(--leben); }
+.wert.gold .wert-icon { color: var(--gold); }
+.wert.stufe .wert-icon { color: var(--blau); }
+.xp-schiene { position: absolute; bottom: -9px; left: 0; right: 0; height: 3px; background: #0c121a; border-radius: 99px; overflow: hidden; }
+#xpBalken { height: 100%; background: var(--blau); width: 0%; }
+
+/* ---------------------------------------------------------- Bühne */
+.buehne {
+  display: grid;
+  grid-template-columns: 232px 1fr 268px;
+  gap: 8px;
+  min-height: 0;
+}
+.spalte {
+  background: linear-gradient(180deg, rgba(28,37,49,.75), rgba(20,27,37,.75));
+  border: 1px solid var(--rand);
+  border-radius: 12px;
+  padding: 10px;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spalte.mitte { background: none; border: none; padding: 0; align-items: center; justify-content: center; position: relative; }
+.spalte h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .14em; color: var(--text-leise); font-weight: 700; }
+
+#brett { max-width: 100%; max-height: 100%; touch-action: none; cursor: default; }
+
+/* ---------------------------------------------------------- Synergien */
+.synergien { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; flex: 1; }
+.syn {
+  display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px;
+  background: #10161f; border: 1px solid var(--rand); border-radius: 8px; padding: 5px 7px;
+  font-size: 12px; opacity: .45; cursor: default;
+}
+.syn.aktiv { opacity: 1; border-color: color-mix(in srgb, var(--farbe) 55%, var(--rand)); background: color-mix(in srgb, var(--farbe) 10%, #10161f); }
+.syn-glyph {
+  width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--farbe) 22%, #0c121a); color: var(--farbe); font-weight: 800; font-size: 12px;
+}
+.syn-name { font-weight: 600; }
+.syn-stufen { color: var(--text-leise); font-size: 11px; font-variant-numeric: tabular-nums; }
+.syn.aktiv .syn-stufen { color: var(--farbe); font-weight: 700; }
+
+.hinweis-box { background: #10161f; border: 1px solid var(--rand); border-radius: 8px; padding: 8px; font-size: 11px; color: var(--text-leise); }
+.hinweis-box h3 { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 5px; color: var(--text); }
+.hinweis-box ul { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.hinweis-box b { color: var(--text); }
+
+/* ---------------------------------------------------------- Rangliste */
+.rangliste { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.rang {
+  display: grid; grid-template-columns: 8px 1fr auto; gap: 7px; align-items: center;
+  background: #10161f; border: 1px solid var(--rand); border-left-width: 3px; border-radius: 7px; padding: 5px 7px; font-size: 12px;
+}
+.rang.ich { background: #16202c; border-color: var(--blau); }
+.rang.tot { opacity: .35; }
+.rang-name { font-weight: 600; display: flex; align-items: center; gap: 5px; }
+.rang-name small { color: var(--text-leise); font-weight: 400; }
+.rang-leben { font-variant-numeric: tabular-nums; font-weight: 700; }
+.rang-syn { grid-column: 2 / -1; display: flex; gap: 3px; flex-wrap: wrap; }
+.rang-syn span { font-size: 9px; padding: 1px 4px; border-radius: 4px; background: #1a2430; color: var(--text-leise); }
+.rang-streak { font-size: 10px; color: var(--gold); }
+
+.log { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; font-size: 11px; color: var(--text-leise); flex: 1; }
+.log-eintrag { padding: 3px 6px; background: #10161f; border-radius: 5px; border-left: 2px solid var(--rand); }
+.log-eintrag.sieg { border-left-color: var(--gruen); color: var(--text); }
+.log-eintrag.niederlage { border-left-color: var(--leben); color: var(--text); }
+
+/* ---------------------------------------------------------- Laden */
+.laden-leiste {
+  display: grid; grid-template-columns: 132px 1fr 176px; gap: 12px; align-items: stretch;
+  background: linear-gradient(180deg, #1a2330, #121924);
+  border: 1px solid var(--rand); border-radius: 14px; padding: 10px;
+}
+.laden-links { display: flex; flex-direction: column; gap: 6px; }
+.laden { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
+
+.laden-aktion {
+  display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px;
+  flex: 1; padding: 0 10px; font-size: 13px;
+}
+.laden-aktion .aktion-icon { font-size: 14px; opacity: .85; text-align: center; }
+.laden-aktion .aktion-text { text-align: left; }
+.laden-aktion .preis { font-size: 12px; }
+.laden-aktion .preis::after { content: ' ◈'; font-size: 10px; opacity: .8; }
+
+/* Ladenkarte: Wappen links, Name und Zugehörigkeit rechts */
+.karte {
+  position: relative; border-radius: 11px; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--rand);
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--kosten-farbe) 16%, transparent) 0%, transparent 58%),
+    linear-gradient(180deg, #1d2734, #151d28);
+  display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 10px;
+  padding: 8px 12px 8px 8px;
+  transition: transform .1s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.karte:hover {
+  transform: translateY(-3px);
+  border-color: var(--kosten-farbe);
+  box-shadow: 0 8px 22px rgba(0,0,0,.5);
+}
+.karte:active { transform: translateY(-1px); }
+.karte.leer { background: #10161f; border-style: dashed; cursor: default; box-shadow: none; }
+.karte.leer:hover { transform: none; border-color: var(--rand); }
+.karte.zu-teuer { opacity: .42; cursor: not-allowed; }
+.karte.zu-teuer:hover { transform: none; box-shadow: none; }
+
+.karte-wappen {
+  width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center;
+  font-size: 24px; color: #f6faff;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--origin-farbe) 62%, #0d131b), #0d131b 78%);
+  border: 1.5px solid color-mix(in srgb, var(--origin-farbe) 55%, transparent);
+  text-shadow: 0 1px 3px rgba(0,0,0,.8);
+}
+.karte-inhalt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.karte-name {
+  font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+}
+.karte-preis { color: var(--kosten-farbe); font-weight: 800; font-size: 13px; flex-shrink: 0; }
+.karte-traits { display: flex; gap: 5px; font-size: 10.5px; color: var(--text-leise); }
+.karte-traits span { display: flex; align-items: center; gap: 3px; }
+.karte-traits i { width: 6px; height: 6px; border-radius: 99px; background: currentColor; display: inline-block; }
+.karte-werte {
+  display: flex; flex-wrap: nowrap; gap: 0 10px; font-size: 10.5px; color: var(--text-leise);
+  font-variant-numeric: tabular-nums; margin-top: 1px;
+}
+.karte-werte span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.karte-werte b { color: #5d6a7c; font-weight: 400; font-size: 10px; }
+.karte:hover .karte-werte { color: var(--text); }
+
+.karte-faehigkeit {
+  display: flex; align-items: baseline; gap: 6px; font-size: 10.5px; margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.karte-faehigkeit b { color: #7fb6ff; font-weight: 600; }
+.karte-faehigkeit span { color: #4f5b6b; }
+
+.karte-fortschritt { display: flex; gap: 3px; margin-top: 4px; }
+.karte-fortschritt i { width: 20px; height: 4px; border-radius: 99px; background: #313d4d; }
+.karte-fortschritt i.an { background: var(--gold); box-shadow: 0 0 6px rgba(242,199,107,.5); }
+
+/* ---------------------------------------------------------- Knöpfe */
+.knopf {
+  background: linear-gradient(180deg, #24303f, #1a2430);
+  border: 1px solid var(--rand); color: var(--text);
+  border-radius: 9px; padding: 7px 12px; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  transition: background .12s ease, border-color .12s ease, transform .06s ease;
+}
+.knopf:hover:not(:disabled) { background: linear-gradient(180deg, #2d3b4d, #212c3a); border-color: #3a4a5e; }
+.knopf:active:not(:disabled) { transform: translateY(1px); }
+.knopf:disabled { opacity: .4; cursor: not-allowed; }
+.knopf .preis { color: var(--gold); font-size: 11px; font-weight: 700; }
+.knopf.leise .preis { color: var(--text-leise); }
+.knopf.leise.an { border-color: var(--gold); }
+.knopf.leise.an .preis { color: var(--gold); }
+.knopf.klein { padding: 4px 8px; font-size: 14px; }
+.knopf.gross {
+  height: 100%; flex-direction: column; justify-content: center; gap: 4px; font-size: 15px;
+  background: linear-gradient(180deg, #34543f, #1f3628); border-color: #47775a;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+}
+.knopf.gross .kampf-text { font-weight: 700; letter-spacing: .02em; }
+.knopf.gross:hover:not(:disabled) { background: linear-gradient(180deg, #3a5c48, #24402f); }
+.knopf.gross.kampf-laeuft { background: linear-gradient(180deg, #4a2f36, #331e24); border-color: #6b3f49; }
+.knopf.gross .preis { color: var(--text-leise); }
+
+/* ---------------------------------------------------------- Banner & Overlay */
+.kampf-banner {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 46px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  text-shadow: 0 4px 24px rgba(0,0,0,.8); pointer-events: none;
+  animation: banner .9s ease-out forwards;
+}
+.kampf-banner.sieg { color: var(--gruen); }
+.kampf-banner.niederlage { color: var(--leben); }
+@keyframes banner {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.7); }
+  25% { opacity: 1; transform: translate(-50%,-50%) scale(1.05); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%,-58%) scale(1); }
+}
+
+.overlay { position: fixed; inset: 0; background: rgba(6,9,13,.86); display: grid; place-items: center; z-index: 50; backdrop-filter: blur(4px); }
+.overlay-karte {
+  background: linear-gradient(180deg, var(--panel-hell), var(--panel));
+  border: 1px solid var(--rand); border-radius: 16px; padding: 28px 32px; width: min(560px, 90vw);
+  display: flex; flex-direction: column; gap: 14px; text-align: center;
+}
+.overlay-karte h2 { font-size: 26px; letter-spacing: .04em; }
+.overlay-karte p { color: var(--text-leise); font-size: 14px; line-height: 1.6; }
+.overlay-details { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--text-leise); max-height: 34vh; overflow-y: auto; }
+.overlay-details .zeile { display: flex; justify-content: space-between; background: #10161f; padding: 5px 9px; border-radius: 6px; }
+.overlay-details .zeile b { color: var(--text); }
+.overlay .knopf.gross { flex-direction: row; height: auto; padding: 11px; }
+
+/* ---------------------------------------------------------- Tooltip */
+.tooltip {
+  position: fixed; z-index: 60; pointer-events: none; max-width: 290px;
+  background: rgba(10,14,20,.97); border: 1px solid var(--rand); border-radius: 10px;
+  padding: 10px 12px; font-size: 12px; line-height: 1.5; box-shadow: 0 10px 34px rgba(0,0,0,.6);
+}
+.tooltip h4 { font-size: 14px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+.tooltip .tt-traits { color: var(--text-leise); font-size: 11px; margin-bottom: 7px; }
+.tooltip .tt-werte { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; margin-bottom: 7px; }
+.tooltip .tt-werte div { display: flex; justify-content: space-between; color: var(--text-leise); }
+.tooltip .tt-werte b { color: var(--text); font-variant-numeric: tabular-nums; }
+.tooltip .tt-faehig { border-top: 1px solid var(--rand); padding-top: 7px; }
+.tooltip .tt-faehig b { color: var(--blau); }
+.tooltip .tt-text { color: var(--text-leise); }
+
+@media (max-width: 1240px) {
+  .buehne { grid-template-columns: 190px 1fr 210px; }
+  .kopf { grid-template-columns: 180px 1fr 330px; }
+}
+
+.syn-leer { font-size: 11px; color: var(--text-leise); line-height: 1.6; background: #10161f; border: 1px dashed var(--rand); border-radius: 8px; padding: 10px; }
+
+/* Kurzinfo unter den Synergien */
+.brett-info {
+  background: #10161f; border: 1px solid var(--rand); border-radius: 8px; padding: 9px 10px;
+  font-size: 11px; color: var(--text-leise); display: flex; flex-direction: column; gap: 5px;
+}
+.brett-info .zeile { display: flex; justify-content: space-between; gap: 8px; }
+.brett-info b { color: var(--text); font-variant-numeric: tabular-nums; }
+.brett-info .voll { color: var(--gold); }

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Runenschlacht – Auto-Battler</title>
+<link rel="stylesheet" href="./src/ui/styles.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⚔</text></svg>" />
+</head>
+<body>
+<div id="app">
+
+  <header class="kopf">
+    <div class="marke"><span class="marke-glyph">⚔</span><span>Runenschlacht</span></div>
+    <div class="kopf-mitte">
+      <div class="runde-anzeige"><span id="rundeText">1-1</span><small id="phaseText">Vorbereitung</small></div>
+      <div class="timer-schiene"><div id="timerBalken"></div></div>
+      <div class="gegner-anzeige" id="gegnerAnzeige">Gegner: –</div>
+    </div>
+    <div class="kopf-werte">
+      <div class="wert leben"><span class="wert-icon">❤</span><span id="lebenText">100</span></div>
+      <div class="wert gold"><span class="wert-icon">◈</span><span id="goldText">0</span></div>
+      <div class="wert stufe">
+        <span class="wert-icon">✦</span><span id="stufeText">2</span>
+        <div class="xp-schiene"><div id="xpBalken"></div></div>
+      </div>
+      <button id="hilfeBtn" class="knopf klein" title="Steuerung anzeigen">?</button>
+      <button id="menueBtn" class="knopf klein" title="Neue Partie">↻</button>
+    </div>
+  </header>
+
+  <main class="buehne">
+    <aside class="spalte links">
+      <h2>Synergien</h2>
+      <div id="synergien" class="synergien"></div>
+      <div class="brett-info" id="brettInfo"></div>
+    </aside>
+
+    <section class="spalte mitte">
+      <canvas id="brett" width="1040" height="940"></canvas>
+      <div id="kampfBanner" class="kampf-banner versteckt"></div>
+    </section>
+
+    <aside class="spalte rechts">
+      <h2>Rangliste</h2>
+      <div id="rangliste" class="rangliste"></div>
+      <h2>Verlauf</h2>
+      <div id="log" class="log"></div>
+    </aside>
+  </main>
+
+  <footer class="laden-leiste">
+    <div class="laden-links">
+      <button id="rerollBtn" class="knopf laden-aktion" title="Neu würfeln (D)">
+        <span class="aktion-icon">⟳</span>
+        <span class="aktion-text">Würfeln</span>
+        <span class="preis">2</span>
+      </button>
+      <button id="xpBtn" class="knopf laden-aktion" title="Erfahrung kaufen (F)">
+        <span class="aktion-icon">✦</span>
+        <span class="aktion-text">Erfahrung</span>
+        <span class="preis">4</span>
+      </button>
+      <button id="sperreBtn" class="knopf laden-aktion leise" title="Laden bis zur nächsten Runde behalten">
+        <span class="aktion-icon" id="sperreIcon">▢</span>
+        <span class="aktion-text">Sperren</span>
+      </button>
+    </div>
+    <div id="laden" class="laden"></div>
+    <button id="kampfBtn" class="knopf gross"><span class="kampf-text">Kampf beginnen</span><span class="preis">Leertaste</span></button>
+  </footer>
+
+  <div id="tooltip" class="tooltip versteckt"></div>
+
+  <div id="overlay" class="overlay versteckt">
+    <div class="overlay-karte">
+      <h2 id="overlayTitel">Runenschlacht</h2>
+      <p id="overlayText"></p>
+      <div id="overlayDetails" class="overlay-details"></div>
+      <button id="overlayBtn" class="knopf gross">Neue Partie</button>
+    </div>
+  </div>
+
+</div>
+<script type="module" src="./src/ui/main.js"></script>
+</body>
+</html>
