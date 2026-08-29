@@ -87,6 +87,56 @@ Sitzungen und keinen Server-Prozess für das Spiel selbst.
 Ein Kampf mit acht gegen acht Einheiten kostet also rund 6 % eines Kerns – gemessen
 mit reiner Software-Rasterung, auf echter Hardware entsprechend weniger.
 
+### Auf autochess.paralympus.de (Deploy-Server + panel)
+
+Auf dem eigenen Hetzner-Server läuft das
+[`deploy`](https://github.com/pablo-roso/deploy)-Toolkit mit dem
+[`panel`](https://github.com/pablo-roso/panel) davor. Dort ist dieses Spiel eine
+Site vom Typ **`static-plain`** — Dateien werden unverändert ausgeliefert, kein
+Build-Schritt, keine Datenbank, kein Media-Volume. Traefik übernimmt TLS und die
+Auslieferung; die nginx-Konfiguration weiter unten braucht es dafür nicht.
+
+Der bequeme Weg ist der Assistent im Panel (**Dashboard → „Site einrichten"**),
+vorbelegt über die Adresszeile:
+
+```
+/sites/einrichten/?slug=autochess&domain=autochess.paralympus.de&type=static-plain&healthcheck=/
+```
+
+Er führt durch dieselben fünf Schritte, die hier zum Nachlesen stehen:
+
+1. **DNS**: A-Record `autochess` in der Zone `paralympus.de` auf die IP des
+   Deploy-Servers. Legt der DNS-Tab des Panels selbst an; sonst beim
+   DNS-Anbieter der Domain.
+2. **Site anlegen**, per SSH auf dem Server als root:
+
+   ```bash
+   sudo deploy add-site \
+     --slug 'autochess' --domain 'autochess.paralympus.de' \
+     --www-mode 'none' \
+     --type 'static-plain' --repo 'git@github.com:CremerFreddy/autochess.git' --branch 'master' \
+     --healthcheck-path '/' \
+     --yes
+   ```
+
+   `--healthcheck-path /` und nicht `/healthz/`: es gibt hier keine
+   Anwendung, die eine Health-View bereitstellen könnte — `index.html` ist
+   der Beweis, dass die Site lebt. `--www-mode none`, weil eine Subdomain
+   kein `www.` davor braucht.
+3. **`panel-agent` freischalten**, damit das Panel die Site sehen darf —
+   `add-collaborator` mit der **vollständigen** neuen Slug-Liste erneut
+   ausführen (überschreibt die alte Freigabe).
+4. **`MANAGED_SITES`** in der `.env` des Panels um `autochess` ergänzen und
+   das Panel neu deployen.
+5. **Prüfen**: die Karte im Dashboard steht auf „gesund", die Domain lädt per
+   HTTPS.
+
+Danach genügt ein Klick auf „Redeploy" im Panel (oder ein Merge, wenn
+Auto-Redeploy für die Site eingeschaltet ist), um eine neue Version
+auszuliefern.
+
+### Irgendein anderer Webserver
+
 `tools/serve.js` ist nur für die Entwicklung gedacht. Für den Betrieb genügt ein
 gewöhnlicher Webserver, wichtig ist allein der richtige MIME-Typ für `.js`
 (ES-Module werden sonst nicht geladen):
