@@ -53,9 +53,14 @@ function naechsteVorbereitung() {
   zeichneAlles();
 }
 
-function beginneKampf() {
+/**
+ * Startet die Kampfphase.
+ * @param {boolean} erzwingen true, wenn die Vorbereitungszeit abgelaufen ist –
+ *   dann beginnt der Kampf auch ohne aufgestellte Einheiten.
+ */
+function beginneKampf(erzwingen = false) {
   if (spiel.phase !== 'vorbereitung') return;
-  if (brettEinheiten(spiel.mensch).length === 0) {
+  if (!erzwingen && brettEinheiten(spiel.mensch).length === 0) {
     zeigeBanner('Keine Einheiten aufgestellt!', 'niederlage');
     return;
   }
@@ -108,7 +113,7 @@ function zeigeEndstand() {
     titel: gewonnen ? 'Sieg – Platz 1!' : `Ausgeschieden – Platz ${platz}`,
     text: gewonnen
       ? 'Du hast alle sieben Gegner überstanden und die Runenschlacht gewonnen.'
-      : `Deine Armee ist gefallen. Du hast ${spiel.rundeNr} Runden durchgehalten.`,
+      : `Deine Armee ist gefallen. Du hast ${spiel.rundeNr} ${spiel.rundeNr === 1 ? 'Runde' : 'Runden'} durchgehalten.`,
     details: rang,
     knopfText: 'Neue Partie',
     aufKnopf: starteNeuePartie,
@@ -124,7 +129,7 @@ function schleife(jetzt) {
   if (spiel) {
     if (spiel.phase === 'vorbereitung') {
       spiel.restZeit -= dt;
-      if (spiel.restZeit <= 0) beginneKampf();
+      if (spiel.restZeit <= 0) beginneKampf(true);
     } else if (spiel.phase === 'kampf' && spiel.kampf) {
       akku += dt * tempo;
       let schritte = 0;
@@ -305,7 +310,7 @@ document.getElementById('sperreBtn').addEventListener('click', () => {
   aktualisiereKopf(spiel);
 });
 
-document.getElementById('kampfBtn').addEventListener('click', beginneKampf);
+document.getElementById('kampfBtn').addEventListener('click', () => beginneKampf());
 
 const STEUERUNG = [
   { links: 'Einheit ziehen', rechts: 'aufstellen, tauschen, auf die Bank legen' },

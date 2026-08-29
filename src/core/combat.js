@@ -204,10 +204,17 @@ function schadenMagisch(kampf, quelle, ziel, roh) {
 function zufuegen(kampf, quelle, ziel, dmg, art) {
   if (!ziel.lebt) return 0;
   dmg = Math.max(1, Math.round(dmg));
+  let abgefangen = 0;
   if (ziel.schild > 0) {
-    const ab = Math.min(ziel.schild, dmg);
-    ziel.schild -= ab;
-    dmg -= ab;
+    abgefangen = Math.min(ziel.schild, dmg);
+    ziel.schild -= abgefangen;
+    dmg -= abgefangen;
+  }
+  if (dmg <= 0) {
+    // Der Schild hat den Treffer vollständig geschluckt.
+    effekt(kampf, { typ: 'schaden', x: ziel.x, y: ziel.y - 0.2, wert: abgefangen, art: 'schild', dauer: 0.55 });
+    ziel.trefferAnim = 1;
+    return 0;
   }
   ziel.hp -= dmg;
   ziel.trefferAnim = 1;

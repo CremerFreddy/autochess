@@ -369,7 +369,7 @@ function zeichneEffektLuft(ctx, e, zeit) {
     case 'schaden': {
       const p = kopf(e.x, e.y + 0.2);
       const versatz = (((e.wert * 37) % 34) - 17) * p.sText;
-      const farben = { physisch: '#ffffff', krit: '#ffd479', magisch: '#a9c9ff', heilung: '#7ef2a8', 'gift-tick': '#b6f26a' };
+      const farben = { physisch: '#ffffff', krit: '#ffd479', magisch: '#a9c9ff', heilung: '#7ef2a8', 'gift-tick': '#b6f26a', schild: '#cfd8e6' };
       ctx.save();
       ctx.globalAlpha = 1 - t * t;
       ctx.fillStyle = farben[e.art] || '#ffffff';
@@ -386,11 +386,13 @@ function zeichneEffektLuft(ctx, e, zeit) {
     case 'tod': {
       const p = feldMitte(e.x, e.y);
       ctx.save();
-      ctx.globalAlpha = (1 - t) * 0.85;
-      ctx.fillStyle = TEAM[e.team].ring;
+      ctx.globalAlpha = (1 - t) * 0.7;
+      ctx.strokeStyle = TEAM[e.team].ring;
+      ctx.lineWidth = 3 * p.s;
+      const rr = (18 + t * 24) * p.s;
       ctx.beginPath();
-      ctx.ellipse(p.px, p.py, (30 * (1 - t) + 8) * p.s, (30 * (1 - t) + 8) * p.s * 0.42, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.ellipse(p.px, p.py, rr, rr * 0.42, 0, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.globalAlpha = 1 - t;
       ctx.fillStyle = 'rgba(255,255,255,.9)';
       ctx.font = `700 ${Math.round(26 * p.s)}px Segoe UI, system-ui, sans-serif`;
