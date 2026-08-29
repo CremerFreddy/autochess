@@ -68,3 +68,39 @@ test/        Tests der Spiellogik (node --test)
 Die Kampfsimulation ist deterministisch: gleicher Seed und gleiche Aufstellung ergeben
 immer denselben Verlauf. Die Oberfläche liest nur Zustand und verändert ihn nie – deshalb
 lassen sich alle Duelle der übrigen Spieler mit derselben Simulation sofort ausrechnen.
+
+## Hosten
+
+Das Spiel ist rein statisch: Der Server liefert nur Dateien aus, die gesamte
+Spiellogik läuft im Browser des Besuchers. Es gibt keine Datenbank, keine
+Sitzungen und keinen Server-Prozess für das Spiel selbst.
+
+| Kennzahl | Wert |
+| --- | --- |
+| Ausgelieferte Dateien | 15 (HTML, CSS, 12 Module) |
+| Übertragung je Erstaufruf | ~130 KB roh, ~37 KB mit gzip |
+| Wiederholter Aufruf | nahezu 0 (nur 304-Antworten) |
+| Belegter Speicherplatz | ~220 KB |
+| Arbeitsspeicher im Browser | ~2,5 MB JS-Speicher |
+| Rechenzeit im Browser | ~1 ms je Bild (0,01 ms Simulation, Rest Zeichnen) |
+
+Ein Kampf mit acht gegen acht Einheiten kostet also rund 6 % eines Kerns – gemessen
+mit reiner Software-Rasterung, auf echter Hardware entsprechend weniger.
+
+`tools/serve.js` ist nur für die Entwicklung gedacht. Für den Betrieb genügt ein
+gewöhnlicher Webserver, wichtig ist allein der richtige MIME-Typ für `.js`
+(ES-Module werden sonst nicht geladen):
+
+```nginx
+server {
+    server_name autochess.example.de;
+    root /var/www/autochess;
+    index index.html;
+
+    gzip on;
+    gzip_types text/css text/javascript application/javascript;
+
+    location ~* \.(js|css)$ { expires 7d; add_header Cache-Control "public"; }
+    location / { try_files $uri $uri/ /index.html; }
+}
+```
