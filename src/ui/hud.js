@@ -39,13 +39,13 @@ export function aktualisiereKopf(spiel) {
   $('rerollBtn').disabled = spiel.phase !== 'vorbereitung' || s.gold < REROLL_KOSTEN;
   $('xpBtn').disabled = spiel.phase !== 'vorbereitung' || s.gold < XP_KOSTEN || s.stufe >= MAX_STUFE;
   $('sperreBtn').classList.toggle('an', s.gesperrt);
-  $('sperreZustand').textContent = s.gesperrt ? 'an' : 'aus';
+  $('sperreIcon').textContent = s.gesperrt ? '▣' : '▢';
 
   const kampfBtn = $('kampfBtn');
   const laeuft = spiel.phase !== 'vorbereitung';
   kampfBtn.classList.toggle('kampf-laeuft', laeuft);
   kampfBtn.disabled = laeuft;
-  kampfBtn.firstChild.textContent = laeuft ? 'Kampf läuft …' : 'Kampf beginnen';
+  kampfBtn.querySelector('.kampf-text').textContent = laeuft ? 'Kampf läuft …' : 'Kampf beginnen';
 }
 
 export function zeichneLaden(spiel, aufKauf, tooltip) {
@@ -66,13 +66,27 @@ export function zeichneLaden(spiel, aufKauf, tooltip) {
 
     const eigene = s.einheiten.filter((e) => e.defId === defId && e.stern === 1).length;
     const pips = [0, 1, 2].map((n) => `<i class="${n < eigene ? 'an' : ''}"></i>`).join('');
+    const w = werteFuer(def, 1);
+    const herkunft = TRAITS[def.origin];
+    const klasse = TRAITS[def.klasse];
+    karte.style.setProperty('--origin-farbe', herkunft.farbe);
 
     karte.innerHTML = `
-      <div class="karte-kopf"><span class="karte-glyph">${def.glyph}</span><span class="karte-name">${def.name}</span></div>
-      <div class="karte-traits"><span>${TRAITS[def.origin].name}</span><span>${TRAITS[def.klasse].name}</span></div>
-      <div class="karte-fuss">
-        <span class="karte-preis">${def.kosten} ◈</span>
-        <span class="karte-fortschritt">${pips}</span>
+      <div class="karte-wappen">${def.glyph}</div>
+      <div class="karte-inhalt">
+        <div class="karte-name"><span>${def.name}</span><span class="karte-preis">${def.kosten} ◈</span></div>
+        <div class="karte-traits">
+          <span style="color:${herkunft.farbe}"><i></i>${herkunft.name}</span>
+          <span style="color:${klasse.farbe}"><i></i>${klasse.name}</span>
+        </div>
+        <div class="karte-werte">
+          <span title="Leben"><b>❤</b>${w.hp}</span>
+          <span title="Angriff"><b>⚔</b>${w.ad}</span>
+          <span title="Reichweite"><b>➶</b>${w.reichweite}</span>
+          <span title="Angriffstempo"><b>⟳</b>${w.as.toFixed(2)}</span>
+        </div>
+        <div class="karte-faehigkeit"><b>${def.faehigkeit.name}</b><span>${w.mana} Mana</span></div>
+        <div class="karte-fortschritt" title="Fortschritt zur Zwei-Sterne-Einheit">${pips}</div>
       </div>`;
     karte.addEventListener('click', () => aufKauf(i));
     karte.addEventListener('mouseenter', (ev) => tooltip.zeige(einheitTooltip(def, 1), ev));
@@ -105,6 +119,18 @@ export function zeichneSynergien(spiel, tooltip) {
     el.addEventListener('mouseleave', () => tooltip.verstecke());
     behaelter.appendChild(el);
   }
+}
+
+/** Kompakte Kennzahlen unter der Synergieliste. */
+export function zeichneBrettInfo(spiel) {
+  const s = spiel.mensch;
+  const belegt = brettEinheiten(s).length;
+  const platz = maxEinheiten(s);
+  const zinsen = Math.min(5, Math.floor(s.gold / 10));
+  $('brettInfo').innerHTML = `
+    <div class="zeile"><span>Einheiten</span><b class="${belegt >= platz ? 'voll' : ''}">${belegt} / ${platz}</b></div>
+    <div class="zeile"><span>Zinsen nächste Runde</span><b>+${zinsen} ◈</b></div>
+    <div class="zeile"><span>Serie</span><b>${s.streak === 0 ? '–' : (s.streak > 0 ? `${s.streak} Siege` : `${Math.abs(s.streak)} Niederlagen`)}</b></div>`;
 }
 
 export function zeichneRangliste(spiel) {

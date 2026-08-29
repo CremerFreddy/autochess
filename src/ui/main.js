@@ -11,11 +11,9 @@ import {
   brettEinheiten, maxEinheiten, aufstellung,
 } from '../core/player.js';
 import { UNIT_BY_ID, verkaufspreis } from '../core/units.js';
+import { zeichne, pixelZuZelle, pixelZuBankSlot, imVerkaufsfeld } from './renderer.js';
 import {
-  zeichne, LAYOUT, pixelZuZelle, pixelZuBankSlot, imVerkaufsfeld, bankSlotRechteck, zelleZuPixel,
-} from './renderer.js';
-import {
-  aktualisiereKopf, zeichneLaden, zeichneSynergien, zeichneRangliste, zeichneLog,
+  aktualisiereKopf, zeichneLaden, zeichneSynergien, zeichneRangliste, zeichneLog, zeichneBrettInfo,
   erstelleTooltip, einheitTooltip, zeigeOverlay, versteckeOverlay, zeigeBanner,
 } from './hud.js';
 import { EIGENE_REIHEN } from '../core/board.js';
@@ -180,6 +178,7 @@ function gegnerVorschau() {
 function zeichneAlles() {
   zeichneLaden(spiel, aufKauf, tooltip);
   zeichneSynergien(spiel, tooltip);
+  zeichneBrettInfo(spiel);
   zeichneRangliste(spiel);
   zeichneLog(spiel);
   aktualisiereKopf(spiel);
@@ -308,6 +307,25 @@ document.getElementById('sperreBtn').addEventListener('click', () => {
 
 document.getElementById('kampfBtn').addEventListener('click', beginneKampf);
 
+const STEUERUNG = [
+  { links: 'Einheit ziehen', rechts: 'aufstellen, tauschen, auf die Bank legen' },
+  { links: 'Auf das rote Feld ziehen · Entf', rechts: 'Einheit verkaufen' },
+  { links: '1 – 5', rechts: 'Ladenplatz kaufen' },
+  { links: 'D · F', rechts: 'Laden würfeln (2 ◈) · Erfahrung kaufen (4 ◈)' },
+  { links: 'Leertaste', rechts: 'Kampf sofort beginnen' },
+  { links: 'S', rechts: 'Kampftempo 1× / 2×' },
+];
+
+document.getElementById('hilfeBtn').addEventListener('click', () => {
+  zeigeOverlay({
+    titel: 'Steuerung',
+    text: 'Drei gleiche Einheiten verschmelzen automatisch zu einer stärkeren.',
+    details: STEUERUNG,
+    knopfText: 'Weiterspielen',
+    aufKnopf: versteckeOverlay,
+  });
+});
+
 document.getElementById('menueBtn').addEventListener('click', () => {
   zeigeOverlay({
     titel: 'Neue Partie?',
@@ -347,13 +365,7 @@ zeigeOverlay({
   text: `Acht Heerführer, ein gemeinsamer Pool, ein Brett.<br>
     Kaufe Einheiten, stelle sie klug auf, sammle Synergien – drei gleiche Einheiten verschmelzen zu einer stärkeren.<br>
     Die Kämpfe laufen von selbst ab. Wer zuletzt steht, gewinnt.`,
-  details: [
-    { links: 'Ziehen', rechts: 'Einheiten aufstellen und tauschen' },
-    { links: 'D / F', rechts: 'Laden würfeln (2 ◈) / Erfahrung kaufen (4 ◈)' },
-    { links: 'Leertaste', rechts: 'Kampf sofort beginnen' },
-    { links: 'S', rechts: 'Kampftempo umschalten' },
-    { links: 'Entf', rechts: 'Ausgewählte Einheit verkaufen' },
-  ],
+  details: STEUERUNG,
   knopfText: 'Partie starten',
   aufKnopf: starteNeuePartie,
 });

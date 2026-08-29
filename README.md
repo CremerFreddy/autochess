@@ -1,7 +1,8 @@
 # Runenschlacht
 
 Ein Auto-Battler (Autochess) für den Browser – reines JavaScript, keine Abhängigkeiten,
-kein Build-Schritt.
+kein Build-Schritt. Das Brett wird in schräger 2.5D-Ansicht gezeichnet: eine echte
+perspektivische Bodenebene, auf der stehende Figuren nach hinten kleiner werden.
 
 ## Starten
 
@@ -57,7 +58,8 @@ src/core/    Spiellogik – ohne DOM, vollständig testbar
   ai.js        Gegner-KI der sieben Mitspieler
   game.js      Partieablauf: Runden, Paarungen, Ausscheiden
 src/ui/      Darstellung und Eingaben
-  renderer.js  Canvas-Darstellung von Brett, Einheiten und Effekten
+  perspektive.js  Projektion der Bodenebene (2.5D) und ihre Umkehrung
+  renderer.js  Canvas-Darstellung von Brett, Figuren und Effekten
   hud.js       Laden, Synergien, Rangliste, Tooltips
   main.js      Spielschleife und Eingaben
 test/        Tests der Spiellogik (node --test)

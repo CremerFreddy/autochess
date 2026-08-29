@@ -64,6 +64,8 @@ class Kaempfer {
     this.spottBis = 0;
     this.asBuffs = [];
     this.dots = [];
+    this.giftAkku = 0;
+    this.giftZeit = 0;
     this.naechsterSchlagBonus = 0;
     this.tot = false;
     this.blick = team === 'a' ? -1 : 1;
@@ -211,7 +213,12 @@ function zufuegen(kampf, quelle, ziel, dmg, art) {
   ziel.trefferAnim = 1;
   if (quelle) quelle.gesamtSchaden += dmg;
   ziel.mana = Math.min(ziel.maxMana, ziel.mana + Math.min(MANA_MAX_PRO_TREFFER, dmg * MANA_PRO_SCHADEN));
-  effekt(kampf, { typ: 'schaden', x: ziel.x, y: ziel.y - 0.2, wert: dmg, art, dauer: 0.7 });
+  if (art === 'gift-tick') {
+    // Gift wirkt jeden Zeitschritt – die Zahlen werden gesammelt ausgegeben.
+    ziel.giftAkku += dmg;
+  } else {
+    effekt(kampf, { typ: 'schaden', x: ziel.x, y: ziel.y - 0.2, wert: dmg, art, dauer: 0.65 });
+  }
   if (ziel.hp <= 0) toeten(kampf, ziel);
   return dmg;
 }
@@ -462,6 +469,14 @@ export function schritt(kampf, dt = TICK) {
     if (k.dots.length) {
       for (const d of k.dots) if (d.bis > t) zufuegen(kampf, d.quelle, k, d.dps * dt, 'gift-tick');
       k.dots = k.dots.filter((d) => d.bis > t);
+    }
+    if (k.giftAkku > 0) {
+      k.giftZeit += dt;
+      if (k.giftZeit >= 1 || !k.dots.length) {
+        effekt(kampf, { typ: 'schaden', x: k.x, y: k.y - 0.2, wert: Math.round(k.giftAkku), art: 'gift-tick', dauer: 0.65 });
+        k.giftAkku = 0;
+        k.giftZeit = 0;
+      }
     }
     k.schlagAnim = Math.max(0, k.schlagAnim - dt * 4);
     k.zauberAnim = Math.max(0, k.zauberAnim - dt * 2.5);

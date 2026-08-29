@@ -24,6 +24,7 @@
         <span class="wert-icon">✦</span><span id="stufeText">2</span>
         <div class="xp-schiene"><div id="xpBalken"></div></div>
       </div>
+      <button id="hilfeBtn" class="knopf klein" title="Steuerung anzeigen">?</button>
       <button id="menueBtn" class="knopf klein" title="Neue Partie">↻</button>
     </div>
   </header>
@@ -32,18 +33,11 @@
     <aside class="spalte links">
       <h2>Synergien</h2>
       <div id="synergien" class="synergien"></div>
-      <div class="hinweis-box">
-        <h3>Steuerung</h3>
-        <ul>
-          <li>Einheit <b>ziehen</b>: aufstellen / tauschen</li>
-          <li>Auf <b>Verkaufen</b> ziehen oder <b>Entf</b></li>
-          <li><b>D</b> würfeln · <b>F</b> Erfahrung · <b>Leertaste</b> Kampf</li>
-        </ul>
-      </div>
+      <div class="brett-info" id="brettInfo"></div>
     </aside>
 
     <section class="spalte mitte">
-      <canvas id="brett" width="1040" height="1000"></canvas>
+      <canvas id="brett" width="1040" height="940"></canvas>
       <div id="kampfBanner" class="kampf-banner versteckt"></div>
     </section>
 
@@ -56,19 +50,24 @@
   </main>
 
   <footer class="laden-leiste">
-    <div class="laden-knoepfe">
-      <button id="rerollBtn" class="knopf" title="Neu würfeln (D)">
-        <span class="knopf-titel">Würfeln</span><span class="preis">2 ◈</span>
+    <div class="laden-links">
+      <button id="rerollBtn" class="knopf laden-aktion" title="Neu würfeln (D)">
+        <span class="aktion-icon">⟳</span>
+        <span class="aktion-text">Würfeln</span>
+        <span class="preis">2</span>
       </button>
-      <button id="xpBtn" class="knopf" title="Erfahrung kaufen (F)">
-        <span class="knopf-titel">Erfahrung</span><span class="preis">4 ◈</span>
+      <button id="xpBtn" class="knopf laden-aktion" title="Erfahrung kaufen (F)">
+        <span class="aktion-icon">✦</span>
+        <span class="aktion-text">Erfahrung</span>
+        <span class="preis">4</span>
       </button>
-      <button id="sperreBtn" class="knopf leise" title="Laden sperren">
-        <span class="knopf-titel">Sperren</span><span class="preis" id="sperreZustand">aus</span>
+      <button id="sperreBtn" class="knopf laden-aktion leise" title="Laden bis zur nächsten Runde behalten">
+        <span class="aktion-icon" id="sperreIcon">▢</span>
+        <span class="aktion-text">Sperren</span>
       </button>
     </div>
     <div id="laden" class="laden"></div>
-    <button id="kampfBtn" class="knopf gross">Kampf beginnen<span class="preis">Leertaste</span></button>
+    <button id="kampfBtn" class="knopf gross"><span class="kampf-text">Kampf beginnen</span><span class="preis">Leertaste</span></button>
   </footer>
 
   <div id="tooltip" class="tooltip versteckt"></div>

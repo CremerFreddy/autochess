@@ -29,7 +29,7 @@ html, body {
 #app {
   height: 100%;
   display: grid;
-  grid-template-rows: 56px 1fr 132px;
+  grid-template-rows: 56px 1fr 146px;
   gap: 8px;
   padding: 8px;
 }
@@ -133,35 +133,78 @@ html, body {
 
 /* ---------------------------------------------------------- Laden */
 .laden-leiste {
-  display: grid; grid-template-columns: 120px 1fr 168px; gap: 10px; align-items: center;
-  background: linear-gradient(180deg, var(--panel-hell), var(--panel));
-  border: 1px solid var(--rand); border-radius: 12px; padding: 10px;
+  display: grid; grid-template-columns: 132px 1fr 176px; gap: 12px; align-items: stretch;
+  background: linear-gradient(180deg, #1a2330, #121924);
+  border: 1px solid var(--rand); border-radius: 14px; padding: 10px;
 }
-.laden-knoepfe { display: flex; flex-direction: column; gap: 6px; }
-.laden { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; height: 100%; }
+.laden-links { display: flex; flex-direction: column; gap: 6px; }
+.laden { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
 
-.karte {
-  position: relative; border-radius: 10px; border: 1px solid var(--rand);
-  background: linear-gradient(160deg, #1b2532, #131a24);
-  padding: 7px 9px; cursor: pointer; overflow: hidden;
-  display: grid; grid-template-rows: auto 1fr auto; gap: 2px;
-  transition: transform .08s ease, border-color .12s ease, box-shadow .12s ease;
+.laden-aktion {
+  display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px;
+  flex: 1; padding: 0 10px; font-size: 13px;
 }
-.karte:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--kosten-farbe) 70%, var(--rand)); box-shadow: 0 6px 18px rgba(0,0,0,.45); }
-.karte.leer { background: #101720; border-style: dashed; cursor: default; }
-.karte.leer:hover { transform: none; box-shadow: none; }
-.karte.zu-teuer { opacity: .45; cursor: not-allowed; }
-.karte::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--kosten-farbe); }
-.karte-kopf { display: flex; align-items: center; gap: 6px; }
-.karte-glyph { font-size: 17px; }
-.karte-name { font-weight: 700; font-size: 13px; }
-.karte-traits { display: flex; gap: 4px; font-size: 10px; color: var(--text-leise); }
-.karte-traits span::before { content: '◈ '; opacity: .6; }
-.karte-fuss { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
-.karte-preis { color: var(--gold); font-weight: 700; }
-.karte-fortschritt { display: flex; gap: 2px; }
-.karte-fortschritt i { width: 5px; height: 5px; border-radius: 99px; background: #2b3745; }
-.karte-fortschritt i.an { background: var(--gold); }
+.laden-aktion .aktion-icon { font-size: 14px; opacity: .85; text-align: center; }
+.laden-aktion .aktion-text { text-align: left; }
+.laden-aktion .preis { font-size: 12px; }
+.laden-aktion .preis::after { content: ' ◈'; font-size: 10px; opacity: .8; }
+
+/* Ladenkarte: Wappen links, Name und Zugehörigkeit rechts */
+.karte {
+  position: relative; border-radius: 11px; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--rand);
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--kosten-farbe) 16%, transparent) 0%, transparent 58%),
+    linear-gradient(180deg, #1d2734, #151d28);
+  display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 10px;
+  padding: 8px 12px 8px 8px;
+  transition: transform .1s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.karte:hover {
+  transform: translateY(-3px);
+  border-color: var(--kosten-farbe);
+  box-shadow: 0 8px 22px rgba(0,0,0,.5);
+}
+.karte:active { transform: translateY(-1px); }
+.karte.leer { background: #10161f; border-style: dashed; cursor: default; box-shadow: none; }
+.karte.leer:hover { transform: none; border-color: var(--rand); }
+.karte.zu-teuer { opacity: .42; cursor: not-allowed; }
+.karte.zu-teuer:hover { transform: none; box-shadow: none; }
+
+.karte-wappen {
+  width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center;
+  font-size: 24px; color: #f6faff;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--origin-farbe) 62%, #0d131b), #0d131b 78%);
+  border: 1.5px solid color-mix(in srgb, var(--origin-farbe) 55%, transparent);
+  text-shadow: 0 1px 3px rgba(0,0,0,.8);
+}
+.karte-inhalt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.karte-name {
+  font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+}
+.karte-preis { color: var(--kosten-farbe); font-weight: 800; font-size: 13px; flex-shrink: 0; }
+.karte-traits { display: flex; gap: 5px; font-size: 10.5px; color: var(--text-leise); }
+.karte-traits span { display: flex; align-items: center; gap: 3px; }
+.karte-traits i { width: 6px; height: 6px; border-radius: 99px; background: currentColor; display: inline-block; }
+.karte-werte {
+  display: flex; flex-wrap: nowrap; gap: 0 10px; font-size: 10.5px; color: var(--text-leise);
+  font-variant-numeric: tabular-nums; margin-top: 1px;
+}
+.karte-werte span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.karte-werte b { color: #5d6a7c; font-weight: 400; font-size: 10px; }
+.karte:hover .karte-werte { color: var(--text); }
+
+.karte-faehigkeit {
+  display: flex; align-items: baseline; gap: 6px; font-size: 10.5px; margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.karte-faehigkeit b { color: #7fb6ff; font-weight: 600; }
+.karte-faehigkeit span { color: #4f5b6b; }
+
+.karte-fortschritt { display: flex; gap: 3px; margin-top: 4px; }
+.karte-fortschritt i { width: 20px; height: 4px; border-radius: 99px; background: #313d4d; }
+.karte-fortschritt i.an { background: var(--gold); box-shadow: 0 0 6px rgba(242,199,107,.5); }
 
 /* ---------------------------------------------------------- Knöpfe */
 .knopf {
@@ -181,9 +224,11 @@ html, body {
 .knopf.leise.an .preis { color: var(--gold); }
 .knopf.klein { padding: 4px 8px; font-size: 14px; }
 .knopf.gross {
-  height: 100%; flex-direction: column; justify-content: center; gap: 3px; font-size: 15px;
-  background: linear-gradient(180deg, #2f4a3a, #1e3327); border-color: #3f6b4f;
+  height: 100%; flex-direction: column; justify-content: center; gap: 4px; font-size: 15px;
+  background: linear-gradient(180deg, #34543f, #1f3628); border-color: #47775a;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
 }
+.knopf.gross .kampf-text { font-weight: 700; letter-spacing: .02em; }
 .knopf.gross:hover:not(:disabled) { background: linear-gradient(180deg, #3a5c48, #24402f); }
 .knopf.gross.kampf-laeuft { background: linear-gradient(180deg, #4a2f36, #331e24); border-color: #6b3f49; }
 .knopf.gross .preis { color: var(--text-leise); }
@@ -238,3 +283,12 @@ html, body {
 }
 
 .syn-leer { font-size: 11px; color: var(--text-leise); line-height: 1.6; background: #10161f; border: 1px dashed var(--rand); border-radius: 8px; padding: 10px; }
+
+/* Kurzinfo unter den Synergien */
+.brett-info {
+  background: #10161f; border: 1px solid var(--rand); border-radius: 8px; padding: 9px 10px;
+  font-size: 11px; color: var(--text-leise); display: flex; flex-direction: column; gap: 5px;
+}
+.brett-info .zeile { display: flex; justify-content: space-between; gap: 8px; }
+.brett-info b { color: var(--text); font-variant-numeric: tabular-nums; }
+.brett-info .voll { color: var(--gold); }

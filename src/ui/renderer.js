@@ -1,34 +1,30 @@
 /**
- * Zeichnet Brett, Bank, Einheiten und Kampfeffekte auf das Canvas.
+ * Zeichnet Brett, Bank, Figuren und Kampfeffekte in schräger 2.5D-Ansicht.
  * Der Renderer liest nur Zustand – er verändert nichts am Spiel.
  */
 import { BREITE, HOEHE, BANK_PLAETZE } from '../core/board.js';
-import { UNIT_BY_ID, werteFuer, verkaufspreis } from '../core/units.js';
-import { ORIGINS } from '../core/units.js';
+import { UNIT_BY_ID, ORIGINS, verkaufspreis } from '../core/units.js';
+import { P, projiziere, feldMitte, entprojiziere, figurHoehe } from './perspektive.js';
 
 export const LAYOUT = {
-  breite: 1040,
-  hoehe: 1000,
-  zelle: 100,
-  brettX: 120,
-  brettY: 10,
-  bankY: 822,
-  bankH: 88,
-  bankSlot: 84,
-  bankLuecke: 6,
-  bankX: 118,
-  verkaufY: 918,
-  verkaufH: 76,
+  breite: P.breite,
+  hoehe: P.hoehe,
+  bankY: 726,
+  bankH: 96,
+  bankSlot: 88,
+  bankLuecke: 7,
+  bankX: 96,
+  bankBreite: 848,
+  verkaufY: 836,
+  verkaufH: 74,
 };
 
-export const zelleZuPixel = (x, y) => ({
-  px: LAYOUT.brettX + x * LAYOUT.zelle + LAYOUT.zelle / 2,
-  py: LAYOUT.brettY + y * LAYOUT.zelle + LAYOUT.zelle / 2,
-});
-
+/** Bildpunkt -> Feld, oder null außerhalb des Bretts. */
 export function pixelZuZelle(px, py) {
-  const x = Math.floor((px - LAYOUT.brettX) / LAYOUT.zelle);
-  const y = Math.floor((py - LAYOUT.brettY) / LAYOUT.zelle);
+  const b = entprojiziere(px, py);
+  if (!b) return null;
+  const x = Math.floor(b.bx);
+  const y = Math.floor(b.by);
   if (x < 0 || x >= BREITE || y < 0 || y >= HOEHE) return null;
   return { x, y };
 }
@@ -49,14 +45,13 @@ export function pixelZuBankSlot(px, py) {
   return null;
 }
 
-export function imVerkaufsfeld(px, py) {
-  return py >= LAYOUT.verkaufY && py <= LAYOUT.verkaufY + LAYOUT.verkaufH
-    && px >= LAYOUT.bankX && px <= LAYOUT.bankX + 804;
-}
+export const imVerkaufsfeld = (px, py) =>
+  py >= LAYOUT.verkaufY && py <= LAYOUT.verkaufY + LAYOUT.verkaufH
+  && px >= LAYOUT.bankX && px <= LAYOUT.bankX + LAYOUT.bankBreite;
 
-const TEAM_FARBEN = {
-  a: { ring: '#6fc7ff', hp: '#5fd08a', schatten: 'rgba(111,199,255,.35)' },
-  b: { ring: '#ff7a6b', hp: '#ff8f7a', schatten: 'rgba(255,122,107,.35)' },
+const TEAM = {
+  a: { ring: '#7cd0ff', hell: '#bfe8ff', hp: '#5fd08a', boden: 'rgba(124,208,255,.30)' },
+  b: { ring: '#ff8a76', hell: '#ffc4b8', hp: '#ff8f7a', boden: 'rgba(255,138,118,.30)' },
 };
 
 function rundesRechteck(ctx, x, y, w, h, r) {
@@ -69,130 +64,167 @@ function rundesRechteck(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-/**
- * Hauptzeichenroutine.
- * @param {CanvasRenderingContext2D} ctx
- * @param {object} z Zustand: {spiel, kampf, drag, hover, zeit, gegnerVorschau}
- */
+/** Pfad eines Feldes als projiziertes Viereck (mit kleiner Fuge). */
+function feldPfad(ctx, x, y, fuge = 0.04) {
+  const a = projiziere(x + fuge, y + fuge);
+  const b = projiziere(x + 1 - fuge, y + fuge);
+  const c = projiziere(x + 1 - fuge, y + 1 - fuge);
+  const d = projiziere(x + fuge, y + 1 - fuge);
+  ctx.beginPath();
+  ctx.moveTo(a.px, a.py);
+  ctx.lineTo(b.px, b.py);
+  ctx.lineTo(c.px, c.py);
+  ctx.lineTo(d.px, d.py);
+  ctx.closePath();
+}
+
+// ------------------------------------------------------------- Hauptlauf
+
 export function zeichne(ctx, z) {
-  const { breite, hoehe } = LAYOUT;
-  ctx.clearRect(0, 0, breite, hoehe);
+  ctx.clearRect(0, 0, LAYOUT.breite, LAYOUT.hoehe);
   zeichneBrett(ctx, z);
   if (z.kampf) zeichneKampf(ctx, z);
   else zeichneVorbereitung(ctx, z);
   zeichneBank(ctx, z);
-  if (z.drag) zeichneVerkaufsfeld(ctx, z);
-  if (z.drag) zeichneGezogene(ctx, z);
+  if (z.drag) {
+    zeichneVerkaufsfeld(ctx, z);
+    zeichneGezogene(ctx, z);
+  }
 }
 
 // ---------------------------------------------------------------- Brett
 
 function zeichneBrett(ctx, z) {
-  const { zelle, brettX, brettY } = LAYOUT;
-  const breite = BREITE * zelle;
-  const hoehe = HOEHE * zelle;
+  const ecken = [projiziere(0, 0), projiziere(BREITE, 0), projiziere(BREITE, HOEHE), projiziere(0, HOEHE)];
 
+  // Materialstärke: dieselbe Fläche nach unten versetzt
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,.6)';
-  ctx.shadowBlur = 34;
-  ctx.shadowOffsetY = 10;
-  rundesRechteck(ctx, brettX - 8, brettY - 8, breite + 16, hoehe + 16, 18);
-  ctx.fillStyle = '#0e141c';
+  ctx.beginPath();
+  ctx.moveTo(ecken[0].px, ecken[0].py);
+  for (const e of ecken.slice(1)) ctx.lineTo(e.px, e.py);
+  for (let i = ecken.length - 1; i >= 0; i--) ctx.lineTo(ecken[i].px, ecken[i].py + P.brettDicke);
+  ctx.closePath();
+  const seite = ctx.createLinearGradient(0, ecken[0].py, 0, ecken[2].py + P.brettDicke);
+  seite.addColorStop(0, '#0a0e14');
+  seite.addColorStop(1, '#05080c');
+  ctx.fillStyle = seite;
+  ctx.shadowColor = 'rgba(0,0,0,.65)';
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 16;
   ctx.fill();
   ctx.restore();
 
-  rundesRechteck(ctx, brettX - 8, brettY - 8, breite + 16, hoehe + 16, 18);
-  ctx.strokeStyle = '#26313f';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  // Grundfläche
+  ctx.beginPath();
+  ctx.moveTo(ecken[0].px, ecken[0].py);
+  for (const e of ecken.slice(1)) ctx.lineTo(e.px, e.py);
+  ctx.closePath();
+  const boden = ctx.createLinearGradient(0, ecken[0].py, 0, ecken[2].py);
+  boden.addColorStop(0, '#141a26');
+  boden.addColorStop(1, '#0f151e');
+  ctx.fillStyle = boden;
+  ctx.fill();
 
   for (let y = 0; y < HOEHE; y++) {
     for (let x = 0; x < BREITE; x++) {
-      const px = brettX + x * zelle;
-      const py = brettY + y * zelle;
       const eigen = y >= HOEHE / 2;
       const hell = (x + y) % 2 === 0;
-      let farbe;
-      if (eigen) farbe = hell ? '#1b2735' : '#16202c';
-      else farbe = hell ? '#1e1a26' : '#181521';
-
-      rundesRechteck(ctx, px + 3, py + 3, zelle - 6, zelle - 6, 10);
-      ctx.fillStyle = farbe;
+      feldPfad(ctx, x, y);
+      if (eigen) ctx.fillStyle = hell ? '#22303f' : '#1a2532';
+      else ctx.fillStyle = hell ? '#2a2233' : '#211b2a';
       ctx.fill();
 
-      // Zielfelder beim Ziehen hervorheben
-      if (z.drag && eigen && !z.kampf) {
-        const frei = !z.belegteFelder?.has(`${x},${y}`);
-        ctx.strokeStyle = frei ? 'rgba(111,199,255,.45)' : 'rgba(242,199,107,.4)';
-        ctx.lineWidth = 2;
-        rundesRechteck(ctx, px + 4, py + 4, zelle - 8, zelle - 8, 9);
-        ctx.stroke();
-      }
-      if (z.hover && z.hover.x === x && z.hover.y === y && eigen && !z.kampf) {
-        ctx.fillStyle = 'rgba(111,199,255,.07)';
-        rundesRechteck(ctx, px + 3, py + 3, zelle - 6, zelle - 6, 10);
-        ctx.fill();
+      // Kantenlicht: obere Kante etwas heller
+      const a = projiziere(x + 0.04, y + 0.04);
+      const b = projiziere(x + 0.96, y + 0.04);
+      ctx.strokeStyle = eigen ? 'rgba(150,200,255,.10)' : 'rgba(200,170,255,.08)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(a.px, a.py);
+      ctx.lineTo(b.px, b.py);
+      ctx.stroke();
+
+      if (!z.kampf && eigen) {
+        if (z.drag) {
+          const frei = !z.belegteFelder?.has(`${x},${y}`);
+          feldPfad(ctx, x, y, 0.08);
+          ctx.strokeStyle = frei ? 'rgba(124,208,255,.5)' : 'rgba(242,199,107,.45)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+        if (z.hover && z.hover.x === x && z.hover.y === y) {
+          feldPfad(ctx, x, y);
+          ctx.fillStyle = 'rgba(124,208,255,.13)';
+          ctx.fill();
+        }
       }
     }
   }
 
-  // Mittellinie
-  const mitteY = brettY + (HOEHE / 2) * zelle;
-  const verlauf = ctx.createLinearGradient(brettX, mitteY, brettX + breite, mitteY);
-  verlauf.addColorStop(0, 'rgba(111,199,255,0)');
-  verlauf.addColorStop(0.5, 'rgba(150,190,255,.35)');
-  verlauf.addColorStop(1, 'rgba(111,199,255,0)');
-  ctx.fillStyle = verlauf;
-  ctx.fillRect(brettX, mitteY - 1, breite, 2);
+  // Mittellinie als leuchtende Kante
+  const ml = projiziere(0, HOEHE / 2);
+  const mr = projiziere(BREITE, HOEHE / 2);
+  const glanz = ctx.createLinearGradient(ml.px, ml.py, mr.px, mr.py);
+  glanz.addColorStop(0, 'rgba(140,190,255,0)');
+  glanz.addColorStop(0.5, 'rgba(160,200,255,.45)');
+  glanz.addColorStop(1, 'rgba(140,190,255,0)');
+  ctx.strokeStyle = glanz;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(ml.px, ml.py);
+  ctx.lineTo(mr.px, mr.py);
+  ctx.stroke();
 }
 
-// ------------------------------------------------------- Vorbereitung
+// -------------------------------------------------------- Vorbereitung
 
 function zeichneVorbereitung(ctx, z) {
   const spieler = z.spiel.mensch;
+  const figuren = [];
+
+  if (z.gegnerVorschau) {
+    for (const e of z.gegnerVorschau.einheiten) {
+      figuren.push({
+        bx: BREITE - 1 - e.x + 0.5, by: HOEHE - 1 - e.y + 0.5,
+        defId: e.defId, stern: e.stern, team: 'b', hpAnteil: 1, blass: true,
+      });
+    }
+  }
   for (const e of spieler.einheiten) {
     if (e.feld.typ !== 'brett') continue;
     if (z.drag && z.drag.einheit === e) continue;
-    const { px, py } = zelleZuPixel(e.feld.x, e.feld.y);
-    zeichneToken(ctx, {
-      px, py, defId: e.defId, stern: e.stern, team: 'a',
-      hpAnteil: 1, manaAnteil: 0, groesse: 1,
+    figuren.push({
+      bx: e.feld.x + 0.5, by: e.feld.y + 0.5,
+      defId: e.defId, stern: e.stern, team: 'a', hpAnteil: 1,
       auswahl: z.auswahl === e.uid,
     });
   }
 
-  // Gegnervorschau in der oberen Hälfte
+  figuren.sort((a, b) => a.by - b.by);
+  for (const f of figuren) zeichneFigur(ctx, f);
+
   if (z.gegnerVorschau) {
+    const p = projiziere(BREITE / 2, 0);
     ctx.save();
-    ctx.globalAlpha = 0.5;
-    for (const e of z.gegnerVorschau.einheiten) {
-      const { px, py } = zelleZuPixel(BREITE - 1 - e.x, HOEHE - 1 - e.y);
-      zeichneToken(ctx, { px, py, defId: e.defId, stern: e.stern, team: 'b', hpAnteil: 1, manaAnteil: 0, groesse: .92 });
-    }
-    ctx.restore();
-    ctx.fillStyle = 'rgba(223,230,240,.5)';
+    ctx.fillStyle = 'rgba(223,230,240,.55)';
     ctx.font = '600 15px Segoe UI, system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`Nächster Gegner: ${z.gegnerVorschau.name}`, LAYOUT.brettX + (BREITE * LAYOUT.zelle) / 2, LAYOUT.brettY + 26);
-    ctx.textAlign = 'left';
+    ctx.fillText(`Nächster Gegner: ${z.gegnerVorschau.name}`, p.px, p.py - 16);
+    ctx.restore();
   }
 }
 
-// ------------------------------------------------------------- Kampf
+// --------------------------------------------------------------- Kampf
 
 function zeichneKampf(ctx, z) {
   const kampf = z.kampf;
+  for (const e of kampf.effekte) zeichneEffektBoden(ctx, e, kampf.zeit);
 
-  for (const e of kampf.effekte) zeichneEffektHinten(ctx, e, kampf.zeit);
-
-  const sortiert = [...kampf.einheiten].sort((a, b) => a.y - b.y);
-  for (const k of sortiert) {
-    if (!k.lebt) continue;
-    const { px, py } = zelleZuPixel(k.x, k.y);
-    const schlag = k.schlagAnim > 0 ? Math.sin(k.schlagAnim * Math.PI) * 9 : 0;
-    const zielX = k.blick * schlag;
-    zeichneToken(ctx, {
-      px: px + zielX, py,
+  const lebende = kampf.einheiten.filter((k) => k.lebt).sort((a, b) => a.y - b.y);
+  for (const k of lebende) {
+    const schlag = k.schlagAnim > 0 ? Math.sin(k.schlagAnim * Math.PI) * 0.16 : 0;
+    zeichneFigur(ctx, {
+      bx: k.x + 0.5 + k.blick * schlag, by: k.y + 0.5,
       defId: k.defId, stern: k.stern, team: k.team,
       hpAnteil: Math.max(0, k.hp / k.maxHp),
       manaAnteil: k.maxMana ? k.mana / k.maxMana : 0,
@@ -203,69 +235,76 @@ function zeichneKampf(ctx, z) {
       betaeubt: kampf.zeit < k.stunBis,
       verwurzelt: kampf.zeit < k.wurzelBis,
       gift: k.dots.length > 0,
-      groesse: 1,
     });
   }
 
-  for (const e of kampf.effekte) zeichneEffektVorne(ctx, e, kampf.zeit);
+  for (const e of kampf.effekte) zeichneEffektLuft(ctx, e, kampf.zeit);
 }
 
-function zeichneEffektHinten(ctx, e, zeit) {
+/** Effekte, die auf dem Boden liegen (unter den Figuren). */
+function zeichneEffektBoden(ctx, e, zeit) {
   const t = (zeit - e.start) / e.dauer;
   if (t < 0 || t > 1) return;
   switch (e.typ) {
     case 'explosion': {
-      const { px, py } = zelleZuPixel(e.x, e.y);
-      const r = e.radius * LAYOUT.zelle * (0.35 + t * 0.75);
+      const p = feldMitte(e.x, e.y);
+      const rx = e.radius * P.vordereZelle * p.s * (0.35 + t * 0.75);
+      const ry = rx * 0.42;
       ctx.save();
-      ctx.globalAlpha = (1 - t) * 0.55;
-      const g = ctx.createRadialGradient(px, py, r * 0.2, px, py, r);
+      ctx.globalAlpha = (1 - t) * 0.5;
+      const g = ctx.createRadialGradient(p.px, p.py, rx * 0.15, p.px, p.py, rx);
       g.addColorStop(0, e.farbe);
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.ellipse(p.px, p.py, rx, ry, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.globalAlpha = (1 - t) * 0.9;
+      ctx.globalAlpha = (1 - t) * 0.95;
       ctx.strokeStyle = e.farbe;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.ellipse(p.px, p.py, rx, ry, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
       break;
     }
     case 'kegel': {
-      const { px, py } = zelleZuPixel(e.x, e.y);
-      const laenge = e.laenge * LAYOUT.zelle * Math.min(1, t * 2.2);
-      const breite = e.breite * LAYOUT.zelle;
-      const winkel = Math.atan2(e.ny, e.nx);
+      // Als projiziertes Viereck auf der Bodenebene
+      const laenge = e.laenge * Math.min(1, t * 2.2);
+      const bx = e.x + 0.5;
+      const by = e.y + 0.5;
+      const qx = -e.ny;
+      const qy = e.nx;
+      const ecken = [
+        [bx + qx * e.breite * 0.3, by + qy * e.breite * 0.3],
+        [bx + e.nx * laenge + qx * e.breite, by + e.ny * laenge + qy * e.breite],
+        [bx + e.nx * laenge - qx * e.breite, by + e.ny * laenge - qy * e.breite],
+        [bx - qx * e.breite * 0.3, by - qy * e.breite * 0.3],
+      ].map(([x, y]) => projiziere(x, y));
       ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(winkel);
-      ctx.globalAlpha = (1 - t) * 0.6;
-      const g = ctx.createLinearGradient(0, 0, laenge, 0);
+      ctx.globalAlpha = (1 - t) * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(ecken[0].px, ecken[0].py);
+      for (const p of ecken.slice(1)) ctx.lineTo(p.px, p.py);
+      ctx.closePath();
+      const g = ctx.createLinearGradient(ecken[0].px, ecken[0].py, ecken[1].px, ecken[1].py);
       g.addColorStop(0, e.farbe);
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.moveTo(0, -breite * 0.35);
-      ctx.lineTo(laenge, -breite);
-      ctx.lineTo(laenge, breite);
-      ctx.lineTo(0, breite * 0.35);
-      ctx.closePath();
       ctx.fill();
       ctx.restore();
       break;
     }
+    case 'ring':
     case 'sprung': {
-      const { px, py } = zelleZuPixel(e.x, e.y);
+      const p = feldMitte(e.x, e.y);
+      const rx = (e.typ === 'sprung' ? 22 + t * 46 : 26 + t * 24) * p.s;
       ctx.save();
       ctx.globalAlpha = 1 - t;
-      ctx.strokeStyle = '#ff7a9c';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = e.farbe || '#ff7a9c';
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(px, py, 20 + t * 40, 0, Math.PI * 2);
+      ctx.ellipse(p.px, p.py, rx, rx * 0.42, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
       break;
@@ -273,28 +312,34 @@ function zeichneEffektHinten(ctx, e, zeit) {
   }
 }
 
-function zeichneEffektVorne(ctx, e, zeit) {
+/** Effekte in Kopfhöhe (über den Figuren). */
+function zeichneEffektLuft(ctx, e, zeit) {
   const t = (zeit - e.start) / e.dauer;
   if (t < 0 || t > 1) return;
+  const kopf = (bx, by) => {
+    const p = feldMitte(bx, by);
+    // Schriftgröße nach hinten nur gedämpft verkleinern, sonst wird sie unlesbar.
+    return { px: p.px, py: p.py - figurHoehe(p.s) * 0.95, s: p.s, sText: 0.72 + p.s * 0.28 };
+  };
   switch (e.typ) {
     case 'geschoss': {
-      const a = zelleZuPixel(e.x1, e.y1);
-      const b = zelleZuPixel(e.x2, e.y2);
-      const px = a.px + (b.px - a.px) * t;
-      const py = a.py + (b.py - a.py) * t - Math.sin(t * Math.PI) * 22;
+      const bx = e.x1 + (e.x2 - e.x1) * t;
+      const by = e.y1 + (e.y2 - e.y1) * t;
+      const p = kopf(bx, by);
+      const bogen = Math.sin(t * Math.PI) * 26 * p.s;
       ctx.save();
       ctx.fillStyle = e.farbe;
       ctx.shadowColor = e.farbe;
       ctx.shadowBlur = 12;
       ctx.beginPath();
-      ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.arc(p.px, p.py - bogen, 5 * p.s, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
       break;
     }
     case 'strahl': {
-      const a = zelleZuPixel(e.x1, e.y1);
-      const b = zelleZuPixel(e.x2, e.y2);
+      const a = kopf(e.x1, e.y1);
+      const b = kopf(e.x2, e.y2);
       ctx.save();
       ctx.globalAlpha = 1 - t;
       ctx.strokeStyle = e.farbe;
@@ -310,180 +355,211 @@ function zeichneEffektVorne(ctx, e, zeit) {
       ctx.restore();
       break;
     }
-    case 'ring': {
-      const { px, py } = zelleZuPixel(e.x, e.y);
-      ctx.save();
-      ctx.globalAlpha = 1 - t;
-      ctx.strokeStyle = e.farbe;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(px, py, 26 + t * 22, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-      break;
-    }
     case 'zauber': {
-      const { px, py } = zelleZuPixel(e.x, e.y);
+      const p = kopf(e.x, e.y);
       ctx.save();
       ctx.globalAlpha = 1 - t;
       ctx.fillStyle = e.farbe;
-      ctx.font = '700 12px Segoe UI, system-ui, sans-serif';
+      ctx.font = `700 ${Math.round(13 * p.sText)}px Segoe UI, system-ui, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText(e.name, px, py - 52 - t * 12);
-      ctx.textAlign = 'left';
+      ctx.fillText(e.name, p.px, p.py - 34 * p.s - t * 12);
       ctx.restore();
       break;
     }
     case 'schaden': {
-      const { px, py } = zelleZuPixel(e.x, e.y);
-      const versatz = ((e.wert * 37) % 34) - 17; // verhindert exakt übereinander liegende Zahlen
+      const p = kopf(e.x, e.y + 0.2);
+      const versatz = (((e.wert * 37) % 34) - 17) * p.sText;
       const farben = { physisch: '#ffffff', krit: '#ffd479', magisch: '#a9c9ff', heilung: '#7ef2a8', 'gift-tick': '#b6f26a' };
       ctx.save();
       ctx.globalAlpha = 1 - t * t;
       ctx.fillStyle = farben[e.art] || '#ffffff';
-      ctx.font = `${e.art === 'krit' ? 800 : 700} ${e.art === 'krit' ? 18 : 14}px Segoe UI, system-ui, sans-serif`;
+      ctx.font = `${e.art === 'krit' ? 800 : 700} ${Math.round((e.art === 'krit' ? 20 : 16) * p.sText)}px Segoe UI, system-ui, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.strokeStyle = 'rgba(0,0,0,.75)';
+      ctx.strokeStyle = 'rgba(0,0,0,.8)';
       ctx.lineWidth = 3;
       const text = (e.art === 'heilung' ? '+' : '') + e.wert;
-      ctx.strokeText(text, px + versatz, py - 36 - t * 30);
-      ctx.fillText(text, px + versatz, py - 36 - t * 30);
-      ctx.textAlign = 'left';
+      ctx.strokeText(text, p.px + versatz, p.py - 26 * p.sText - t * 34);
+      ctx.fillText(text, p.px + versatz, p.py - 26 * p.sText - t * 34);
       ctx.restore();
       break;
     }
     case 'tod': {
-      const { px, py } = zelleZuPixel(e.x, e.y);
+      const p = feldMitte(e.x, e.y);
       ctx.save();
-      ctx.globalAlpha = (1 - t) * 0.8;
-      ctx.fillStyle = TEAM_FARBEN[e.team].ring;
+      ctx.globalAlpha = (1 - t) * 0.85;
+      ctx.fillStyle = TEAM[e.team].ring;
       ctx.beginPath();
-      ctx.arc(px, py, 30 * (1 - t) + 8, 0, Math.PI * 2);
+      ctx.ellipse(p.px, p.py, (30 * (1 - t) + 8) * p.s, (30 * (1 - t) + 8) * p.s * 0.42, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1 - t;
-      ctx.fillStyle = 'rgba(255,255,255,.85)';
-      ctx.font = '700 26px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.9)';
+      ctx.font = `700 ${Math.round(26 * p.s)}px Segoe UI, system-ui, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText(e.glyph, px, py + 9 - t * 18);
-      ctx.textAlign = 'left';
+      ctx.fillText(e.glyph, p.px, p.py - figurHoehe(p.s) - t * 26);
       ctx.restore();
       break;
     }
   }
 }
 
-// -------------------------------------------------------------- Token
+// -------------------------------------------------------------- Figuren
 
-/** Zeichnet eine Einheit als Spielstein. */
-export function zeichneToken(ctx, o) {
+/**
+ * Zeichnet eine stehende Spielfigur: Sockel auf dem Boden, Körper, Kopf.
+ * Erwartet Brettkoordinaten (bx, by) – oder feste Bildpunkte (px, py, s).
+ */
+export function zeichneFigur(ctx, o) {
   const def = UNIT_BY_ID[o.defId];
   if (!def) return;
-  const g = o.groesse ?? 1;
-  const r = 34 * g;
-  const team = TEAM_FARBEN[o.team] || TEAM_FARBEN.a;
+  const p = o.px !== undefined ? { px: o.px, py: o.py, s: o.s ?? 1 } : projiziere(o.bx, o.by);
+  const g = p.s * (o.groesse ?? 1);
+  const team = TEAM[o.team] || TEAM.a;
   const originFarbe = ORIGINS[def.origin]?.farbe || '#8fa8ff';
 
+  const kopfR = 27 * g;
+  const hoehe = 56 * g;
+  const sockelRx = 30 * g;
+  const sockelRy = 11.5 * g;
+  const kopfY = p.py - hoehe;
+
   ctx.save();
-  // Schatten
-  ctx.fillStyle = 'rgba(0,0,0,.45)';
+  if (o.blass) ctx.globalAlpha = 0.42;
+
+  // Schatten auf dem Boden
+  const schatten = ctx.createRadialGradient(p.px, p.py, 1, p.px, p.py, sockelRx * 1.25);
+  schatten.addColorStop(0, 'rgba(0,0,0,.55)');
+  schatten.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = schatten;
   ctx.beginPath();
-  ctx.ellipse(o.px, o.py + r * 0.78, r * 0.78, r * 0.28, 0, 0, Math.PI * 2);
+  ctx.ellipse(p.px, p.py + sockelRy * 0.25, sockelRx * 1.25, sockelRy * 1.15, 0, 0, Math.PI * 2);
   ctx.fill();
-
-  if (o.zauber > 0) {
-    ctx.globalAlpha = o.zauber * 0.6;
-    ctx.fillStyle = originFarbe;
-    ctx.beginPath();
-    ctx.arc(o.px, o.py, r * (1.15 + o.zauber * 0.25), 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-
-  // Grundkörper
-  const grad = ctx.createLinearGradient(o.px, o.py - r, o.px, o.py + r);
-  grad.addColorStop(0, mische(originFarbe, '#ffffff', 0.28));
-  grad.addColorStop(1, mische(originFarbe, '#0b1017', 0.62));
-  ctx.beginPath();
-  ctx.arc(o.px, o.py, r, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Teamring
-  ctx.lineWidth = 3.5 * g;
-  ctx.strokeStyle = team.ring;
-  ctx.stroke();
 
   if (o.auswahl) {
-    ctx.lineWidth = 2;
     ctx.strokeStyle = '#ffd479';
-    ctx.setLineDash([5, 4]);
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 5]);
     ctx.beginPath();
-    ctx.arc(o.px, o.py, r + 6, 0, Math.PI * 2);
+    ctx.ellipse(p.px, p.py, sockelRx * 1.18, sockelRy * 1.18, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
   }
 
-  // Trefferblitz
+  // Sockel in Teamfarbe
+  ctx.fillStyle = team.boden;
+  ctx.beginPath();
+  ctx.ellipse(p.px, p.py, sockelRx, sockelRy, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = team.ring;
+  ctx.lineWidth = 2.2 * g;
+  ctx.stroke();
+
+  if (o.zauber > 0) {
+    ctx.save();
+    ctx.globalAlpha = o.zauber * 0.5;
+    ctx.strokeStyle = originFarbe;
+    ctx.lineWidth = 3 * g;
+    ctx.beginPath();
+    ctx.ellipse(p.px, p.py, sockelRx * (1.1 + o.zauber * 0.5), sockelRy * (1.1 + o.zauber * 0.5), 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Körper: verjüngt sich vom Sockel zum Kopf
+  const unten = sockelRx * 0.66;
+  const oben = kopfR * 0.62;
+  ctx.beginPath();
+  ctx.moveTo(p.px - unten, p.py);
+  ctx.quadraticCurveTo(p.px - unten * 0.95, kopfY + kopfR * 0.7, p.px - oben, kopfY + kopfR * 0.35);
+  ctx.lineTo(p.px + oben, kopfY + kopfR * 0.35);
+  ctx.quadraticCurveTo(p.px + unten * 0.95, kopfY + kopfR * 0.7, p.px + unten, p.py);
+  ctx.closePath();
+  const koerper = ctx.createLinearGradient(p.px - unten, 0, p.px + unten, 0);
+  koerper.addColorStop(0, mische(originFarbe, '#080c12', 0.72));
+  koerper.addColorStop(0.42, mische(originFarbe, '#0b1017', 0.42));
+  koerper.addColorStop(1, mische(originFarbe, '#080c12', 0.78));
+  ctx.fillStyle = koerper;
+  ctx.fill();
+
+  // Kopf
+  const kopf = ctx.createRadialGradient(p.px - kopfR * 0.35, kopfY - kopfR * 0.4, kopfR * 0.15, p.px, kopfY, kopfR);
+  kopf.addColorStop(0, mische(originFarbe, '#ffffff', 0.45));
+  kopf.addColorStop(1, mische(originFarbe, '#0b1017', 0.55));
+  ctx.beginPath();
+  ctx.arc(p.px, kopfY, kopfR, 0, Math.PI * 2);
+  ctx.fillStyle = kopf;
+  ctx.fill();
+  ctx.lineWidth = 2.6 * g;
+  ctx.strokeStyle = team.ring;
+  ctx.stroke();
+
   if (o.treffer > 0) {
-    ctx.globalAlpha = o.treffer * 0.55;
+    ctx.globalAlpha = o.treffer * 0.6;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(o.px, o.py, r, 0, Math.PI * 2);
+    ctx.arc(p.px, kopfY, kopfR, 0, Math.PI * 2);
     ctx.fill();
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = o.blass ? 0.42 : 1;
   }
 
   // Symbol
-  ctx.font = `700 ${Math.round(26 * g)}px "Segoe UI Symbol", "Noto Sans Symbols 2", Segoe UI, system-ui, sans-serif`;
+  ctx.font = `700 ${Math.round(27 * g)}px "Segoe UI Symbol", "Noto Sans Symbols 2", Segoe UI, system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = 'rgba(8,12,18,.85)';
-  ctx.strokeText(def.glyph, o.px, o.py + 1);
-  ctx.fillStyle = '#f4f8ff';
-  ctx.fillText(def.glyph, o.px, o.py + 1);
+  ctx.lineWidth = 3.5;
+  ctx.strokeStyle = 'rgba(8,12,18,.8)';
+  ctx.strokeText(def.glyph, p.px, kopfY + 1);
+  ctx.fillStyle = '#f6faff';
+  ctx.fillText(def.glyph, p.px, kopfY + 1);
   ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
+
+  let obenY = kopfY - kopfR - 6 * g;
 
   // Sterne
   if (o.stern > 1) {
     const sterne = '★'.repeat(o.stern);
     ctx.font = `700 ${Math.round(13 * g)}px Segoe UI, system-ui, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.strokeStyle = 'rgba(0,0,0,.8)';
+    ctx.strokeStyle = 'rgba(0,0,0,.85)';
     ctx.lineWidth = 3;
-    ctx.strokeText(sterne, o.px, o.py - r - 5);
-    ctx.fillStyle = o.stern >= 3 ? '#ffd479' : '#e6e6e6';
-    ctx.fillText(sterne, o.px, o.py - r - 5);
-    ctx.textAlign = 'left';
+    ctx.strokeText(sterne, p.px, obenY);
+    ctx.fillStyle = o.stern >= 3 ? '#ffd479' : '#e9eef5';
+    ctx.fillText(sterne, p.px, obenY);
+    obenY -= 13 * g;
   }
+  ctx.textAlign = 'left';
 
-  // Balken
-  const bw = r * 1.85;
-  const bx = o.px - bw / 2;
-  const by = o.py + r * 0.98;
-  if (o.hpAnteil !== undefined) {
-    balken(ctx, bx, by, bw, 6 * g, o.hpAnteil, team.hp, '#0a0f15');
+  // Leben und Mana über dem Kopf
+  if (o.hpAnteil !== undefined && !o.blass) {
+    const bw = 48 * g;
+    const bx = p.px - bw / 2;
+    const by = obenY - 8 * g;
+    balken(ctx, bx, by, bw, 6 * g, o.hpAnteil, team.hp);
     if (o.schildAnteil) {
-      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.fillStyle = 'rgba(255,255,255,.8)';
       ctx.fillRect(bx, by, bw * Math.min(1, o.schildAnteil), 6 * g);
     }
-  }
-  if (o.manaAnteil !== undefined && o.zeigeMana) {
-    balken(ctx, bx, by + 7 * g, bw, 4 * g, o.manaAnteil, '#5aa8ff', '#0a0f15');
+    if (o.zeigeMana) balken(ctx, bx, by - 6 * g, bw, 4 * g, o.manaAnteil, '#5aa8ff');
   }
 
   // Zustandssymbole
-  let sx = o.px - 12;
-  if (o.betaeubt) { ctx.fillStyle = '#ffd479'; ctx.font = '13px system-ui'; ctx.fillText('✳', sx, o.py - r - 16); sx += 14; }
-  if (o.verwurzelt) { ctx.fillStyle = '#7ef2a8'; ctx.font = '13px system-ui'; ctx.fillText('⌇', sx, o.py - r - 16); sx += 14; }
-  if (o.gift) { ctx.fillStyle = '#b6f26a'; ctx.font = '13px system-ui'; ctx.fillText('☣', sx, o.py - r - 16); }
+  const zeichen = [];
+  if (o.betaeubt) zeichen.push(['✳', '#ffd479']);
+  if (o.verwurzelt) zeichen.push(['⌇', '#7ef2a8']);
+  if (o.gift) zeichen.push(['☣', '#b6f26a']);
+  if (zeichen.length) {
+    ctx.font = `${Math.round(13 * g)}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    zeichen.forEach(([sym, farbe], i) => {
+      ctx.fillStyle = farbe;
+      ctx.fillText(sym, p.px + (i - (zeichen.length - 1) / 2) * 14 * g, kopfY + kopfR + 14 * g);
+    });
+    ctx.textAlign = 'left';
+  }
 
   ctx.restore();
 }
 
-function balken(ctx, x, y, w, h, anteil, farbe, hintergrund) {
-  ctx.fillStyle = hintergrund;
+function balken(ctx, x, y, w, h, anteil, farbe) {
+  ctx.fillStyle = 'rgba(6,10,15,.85)';
   rundesRechteck(ctx, x - 1, y - 1, w + 2, h + 2, 3);
   ctx.fill();
   ctx.fillStyle = farbe;
@@ -492,34 +568,44 @@ function balken(ctx, x, y, w, h, anteil, farbe, hintergrund) {
 }
 
 function mische(a, b, t) {
-  const p = (c) => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
-  const [r1, g1, b1] = p(a);
-  const [r2, g2, b2] = p(b);
+  const teil = (c) => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  const [r1, g1, b1] = teil(a);
+  const [r2, g2, b2] = teil(b);
   const m = (x, y) => Math.round(x + (y - x) * t);
   return `rgb(${m(r1, r2)},${m(g1, g2)},${m(b1, b2)})`;
 }
 
-// --------------------------------------------------------------- Bank
+// ----------------------------------------------------------------- Bank
 
 function zeichneBank(ctx, z) {
   const spieler = z.spiel.mensch;
+  ctx.save();
+  rundesRechteck(ctx, LAYOUT.bankX - 10, LAYOUT.bankY - 10, LAYOUT.bankBreite + 20, LAYOUT.bankH + 20, 14);
+  ctx.fillStyle = 'rgba(12,17,24,.7)';
+  ctx.fill();
+  ctx.strokeStyle = '#1e2836';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
   for (let i = 0; i < BANK_PLAETZE; i++) {
     const r = bankSlotRechteck(i);
     rundesRechteck(ctx, r.x, r.y, r.w, r.h, 10);
-    ctx.fillStyle = z.hoverBank === i ? '#1b2735' : '#131a24';
+    ctx.fillStyle = z.hoverBank === i && z.drag ? '#1d2a39' : '#131a24';
     ctx.fill();
-    ctx.strokeStyle = z.drag ? 'rgba(111,199,255,.35)' : '#232e3c';
+    ctx.strokeStyle = z.drag ? 'rgba(124,208,255,.4)' : '#232e3c';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
+
   for (const e of spieler.einheiten) {
     if (e.feld.typ !== 'bank') continue;
     if (z.drag && z.drag.einheit === e) continue;
     const r = bankSlotRechteck(e.feld.slot);
-    zeichneToken(ctx, {
-      px: r.x + r.w / 2, py: r.y + r.h / 2,
+    zeichneFigur(ctx, {
+      px: r.x + r.w / 2, py: r.y + r.h - 16, s: 0.66,
       defId: e.defId, stern: e.stern, team: 'a',
-      groesse: 0.72, auswahl: z.auswahl === e.uid,
+      auswahl: z.auswahl === e.uid,
     });
   }
 }
@@ -529,28 +615,26 @@ function zeichneVerkaufsfeld(ctx, z) {
   const def = UNIT_BY_ID[einheit.defId];
   const preis = verkaufspreis(def, einheit.stern);
   const aktiv = z.verkaufAktiv;
-  const y = LAYOUT.verkaufY;
-  const h = LAYOUT.verkaufH;
-  rundesRechteck(ctx, LAYOUT.bankX, y, 804, h, 12);
-  ctx.fillStyle = aktiv ? 'rgba(255,107,122,.28)' : 'rgba(255,107,122,.09)';
+  rundesRechteck(ctx, LAYOUT.bankX, LAYOUT.verkaufY, LAYOUT.bankBreite, LAYOUT.verkaufH, 12);
+  ctx.fillStyle = aktiv ? 'rgba(255,107,122,.3)' : 'rgba(255,107,122,.09)';
   ctx.fill();
   ctx.strokeStyle = aktiv ? '#ff6b7a' : 'rgba(255,107,122,.45)';
   ctx.lineWidth = aktiv ? 3 : 1.5;
   ctx.setLineDash([9, 6]);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = aktiv ? '#ffd7dc' : 'rgba(255,180,190,.8)';
+  ctx.fillStyle = aktiv ? '#ffd7dc' : 'rgba(255,180,190,.85)';
   ctx.font = '700 17px Segoe UI, system-ui, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(`${def.name} verkaufen  ·  +${preis} ◈`, LAYOUT.bankX + 402, y + h / 2 + 6);
+  ctx.fillText(`${def.name} verkaufen · +${preis} ◈`,
+    LAYOUT.bankX + LAYOUT.bankBreite / 2, LAYOUT.verkaufY + LAYOUT.verkaufH / 2 + 6);
   ctx.textAlign = 'left';
 }
 
 function zeichneGezogene(ctx, z) {
   const e = z.drag.einheit;
-  zeichneToken(ctx, {
-    px: z.drag.px, py: z.drag.py,
+  zeichneFigur(ctx, {
+    px: z.drag.px, py: z.drag.py + 18, s: 0.95,
     defId: e.defId, stern: e.stern, team: 'a',
-    groesse: 1.06,
   });
 }
